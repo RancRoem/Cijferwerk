@@ -251,6 +251,11 @@
             cursor: not-allowed;
         }
 
+        .btn-sm {
+            padding: 4px 10px;
+            font-size: 12px;
+        }
+
         .btn-primary {
             background-color: var(--accent);
             border-color: var(--accent);
@@ -259,6 +264,16 @@
 
         .btn-primary:hover:not(:disabled) {
             background-color: var(--accent-hover);
+        }
+
+        .btn-success {
+            background-color: var(--success);
+            border-color: var(--success);
+            color: #ffffff;
+        }
+
+        .btn-success:hover:not(:disabled) {
+            filter: brightness(0.92);
         }
 
         .btn-danger-ghost {
@@ -293,7 +308,7 @@
         /* === KAARTEN, TABELLEN & FORMULIEREN === */
         .grid-cards {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
             gap: 16px;
             margin-bottom: 24px;
         }
@@ -428,7 +443,7 @@
         /* Journaal Boekingsregels */
         .entry-meta-grid {
             display: grid;
-            grid-template-columns: 150px 1fr 180px;
+            grid-template-columns: 150px 1fr 170px 140px;
             gap: 12px;
             padding: 16px 20px;
             border-bottom: 1px solid var(--border-color);
@@ -580,6 +595,7 @@
             border-radius: 999px;
             font-size: 11px;
             font-weight: 600;
+            white-space: nowrap;
         }
 
         .badge-activa { background: var(--accent-soft); color: var(--accent); }
@@ -872,6 +888,14 @@
                                     <option value="Memoriaal">Memoriaal</option>
                                 </select>
                             </div>
+                            <div class="field-group">
+                                <label class="field-label" for="entryTermDays">Betalingstermijn</label>
+                                <select class="select" id="entryTermDays">
+                                    <option value="14">14 dagen</option>
+                                    <option value="30">30 dagen</option>
+                                    <option value="0">Direct voldaan</option>
+                                </select>
+                            </div>
                         </div>
 
                         <div class="journal-lines-wrap">
@@ -923,11 +947,77 @@
                     </div>
                 </section>
 
-                <!-- VIEW: RELATIES -->
+                <!-- VIEW: DEBITEUREN & CREDITEUREN -->
                 <section id="view-relaties" class="view-section">
-                    <div class="empty-state">
-                        <h3>Debiteuren & Crediteuren</h3>
-                        <p>Hier verschijnt in Stap 5 het overzicht van openstaande facturen, vervaldatums en herinneringsteksten.</p>
+                    <div class="grid-cards">
+                        <div class="card">
+                            <div class="card-label">Openstaande Debiteuren (1300)</div>
+                            <div class="card-value" id="openDebtorsTotal" style="color: var(--success);">€ 0,00</div>
+                        </div>
+                        <div class="card">
+                            <div class="card-label">Openstaande Crediteuren (1600)</div>
+                            <div class="card-value" id="openCreditorsTotal" style="color: var(--warning);">€ 0,00</div>
+                        </div>
+                        <div class="card">
+                            <div class="card-label">Actueel Banksaldo (1100)</div>
+                            <div class="card-value" id="bankBalanceTotal">€ 0,00</div>
+                        </div>
+                    </div>
+
+                    <!-- Debiteuren Tabel -->
+                    <div class="panel">
+                        <div class="panel-header">
+                            <div>
+                                <div class="panel-title">Debiteuren — Nog te ontvangen van klanten (1300)</div>
+                                <div style="font-size: 12px; color: var(--text-muted);">Klik op <strong>Markeer als betaald</strong> om direct een ontvangstboeking op de bankrekening te maken.</div>
+                            </div>
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="showPaidInvoices">
+                                <span>Toon ook reeds betaalde posten</span>
+                            </label>
+                        </div>
+                        <div class="table-wrap">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th style="width: 70px;">Nr.</th>
+                                        <th style="width: 110px;">Factuurdatum</th>
+                                        <th style="width: 110px;">Vervaldatum</th>
+                                        <th>Klant & Omschrijving</th>
+                                        <th style="width: 140px;">Status</th>
+                                        <th style="width: 120px; text-align: right;">Bedrag</th>
+                                        <th style="width: 240px; text-align: right;">Acties</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="debtorsTableBody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Crediteuren Tabel -->
+                    <div class="panel">
+                        <div class="panel-header">
+                            <div>
+                                <div class="panel-title">Crediteuren — Nog te betalen aan leveranciers (1600)</div>
+                                <div style="font-size: 12px; color: var(--text-muted);">Boek uitgaande betalingen met één klik af op rekening 1100 (Zakelijke Bankrekening).</div>
+                            </div>
+                        </div>
+                        <div class="table-wrap">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th style="width: 70px;">Nr.</th>
+                                        <th style="width: 110px;">Factuurdatum</th>
+                                        <th style="width: 110px;">Vervaldatum</th>
+                                        <th>Leverancier & Omschrijving</th>
+                                        <th style="width: 140px;">Status</th>
+                                        <th style="width: 120px; text-align: right;">Bedrag</th>
+                                        <th style="width: 170px; text-align: right;">Acties</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="creditorsTableBody"></tbody>
+                            </table>
+                        </div>
                     </div>
                 </section>
 
@@ -1090,25 +1180,22 @@
     </div>
 
     <script>
-        /* === STAP 4: AUTOMATISCHE BTW-AANGIFTE (NEDERLANDS MODEL) === */
+        /* === STAP 5: DEBITEUREN, CREDITEUREN, VERVALDATUMS & AFLETTEREN === */
         const DB_NAME = 'CijferwerkDB';
         const DB_VERSION = 1;
 
         const DEFAULT_ACCOUNTS = [
-            // Activa (0xxx - 1xxx)
             { code: '0100', name: 'Inventaris & Apparatuur', category: 'Activa', defaultVat: '21' },
             { code: '1000', name: 'Kas', category: 'Activa', defaultVat: 'N/A' },
             { code: '1100', name: 'Zakelijke Bankrekening', category: 'Activa', defaultVat: 'N/A' },
             { code: '1200', name: 'Spaarrekening (Belastingreservering)', category: 'Activa', defaultVat: 'N/A' },
             { code: '1300', name: 'Debiteuren (Nog te ontvangen)', category: 'Activa', defaultVat: 'N/A' },
-            // Passiva (05xx - 16xx)
             { code: '0500', name: 'Eigen Vermogen', category: 'Passiva', defaultVat: 'N/A' },
             { code: '0550', name: 'Privé-opnamen & Stortingen', category: 'Passiva', defaultVat: 'N/A' },
             { code: '1510', name: 'Af te dragen BTW 21% (1a)', category: 'Passiva', defaultVat: 'N/A' },
             { code: '1520', name: 'Af te dragen BTW 9% (1b)', category: 'Passiva', defaultVat: 'N/A' },
             { code: '1530', name: 'Te vorderen Voorbelasting (5b)', category: 'Activa', defaultVat: 'N/A' },
             { code: '1600', name: 'Crediteuren (Nog te betalen)', category: 'Passiva', defaultVat: 'N/A' },
-            // Kosten (4xxx - 7xxx)
             { code: '4100', name: 'Huisvestingskosten & Werkruimte', category: 'Kosten', defaultVat: '21' },
             { code: '4300', name: 'Kantoorkosten & Vakliteratuur', category: 'Kosten', defaultVat: '21' },
             { code: '4400', name: 'Telefoon, Internet & Hosting', category: 'Kosten', defaultVat: '21' },
@@ -1118,7 +1205,6 @@
             { code: '4800', name: 'Bankkosten & Verzekeringen', category: 'Kosten', defaultVat: '0' },
             { code: '4900', name: 'Accountancy & Juridisch Advies', category: 'Kosten', defaultVat: '21' },
             { code: '7000', name: 'Inkoopwaarde Omzet / Uitbesteed werk', category: 'Kosten', defaultVat: '21' },
-            // Opbrengsten (8xxx)
             { code: '8000', name: 'Omzet Diensten & Consultancy (21%)', category: 'Opbrengsten', defaultVat: '21' },
             { code: '8100', name: 'Omzet Producten Hoog Tarief (21%)', category: 'Opbrengsten', defaultVat: '21' },
             { code: '8200', name: 'Omzet Laag Tarief (9%)', category: 'Opbrengsten', defaultVat: '9' },
@@ -1137,7 +1223,6 @@
             lastVatReportText: ''
         };
 
-        // Euro-formattering
         function formatEuro(amount, wholeEuros = false) {
             const val = Math.abs(amount) < 0.005 ? 0 : amount;
             return new Intl.NumberFormat('nl-NL', {
@@ -1150,6 +1235,18 @@
 
         function roundCents(num) {
             return Math.round((Number(num) + Number.EPSILON) * 100) / 100;
+        }
+
+        function addDaysToDate(isoDate, days) {
+            const d = new Date(isoDate + 'T12:00:00');
+            d.setDate(d.getDate() + (parseInt(days, 10) || 14));
+            return d.toISOString().split('T')[0];
+        }
+
+        function daysBetween(isoDateA, isoDateB) {
+            const a = new Date(isoDateA + 'T12:00:00');
+            const b = new Date(isoDateB + 'T12:00:00');
+            return Math.round((b - a) / (1000 * 60 * 60 * 24));
         }
 
         // IndexedDB Setup
@@ -1210,6 +1307,7 @@
             renderEntriesTable();
             renderDashboard();
             renderVatReturn();
+            renderOpenItems();
             updateDbStatus(true);
         }
 
@@ -1253,6 +1351,15 @@
             });
         }
 
+        function updateEntryInDB(entry) {
+            return new Promise((resolve, reject) => {
+                const tx = state.db.transaction('entries', 'readwrite');
+                const req = tx.objectStore('entries').put(entry);
+                req.onsuccess = () => resolve();
+                req.onerror = () => reject(new Error('Fout bij bijwerken van boeking.'));
+            });
+        }
+
         function deleteEntryFromDB(id) {
             return new Promise((resolve, reject) => {
                 const tx = state.db.transaction('entries', 'readwrite');
@@ -1288,6 +1395,184 @@
             }
         }
 
+        /* === DEBITEUREN & CREDITEUREN (OPENSTAANDE POSTEN) === */
+        function renderOpenItems() {
+            const showPaid = document.getElementById('showPaidInvoices').checked;
+            const todayStr = new Date().toISOString().split('T')[0];
+
+            // Verzamel openstaande posten uit journaalregels op 1300 (Debiteuren) en 1600 (Crediteuren)
+            const debtors = [];
+            const creditors = [];
+
+            state.entries.forEach(entry => {
+                const termDays = entry.termDays !== undefined ? entry.termDays : 14;
+                const dueDate = entry.dueDate || addDaysToDate(entry.date, termDays);
+                const isPaid = Boolean(entry.paid);
+
+                entry.lines.forEach(line => {
+                    if (line.accountCode === '1300' && line.debit > 0) {
+                        debtors.push({
+                            entryId: entry.id,
+                            date: entry.date,
+                            dueDate,
+                            description: entry.description,
+                            amount: line.debit,
+                            isPaid
+                        });
+                    } else if (line.accountCode === '1600' && line.credit > 0) {
+                        creditors.push({
+                            entryId: entry.id,
+                            date: entry.date,
+                            dueDate,
+                            description: entry.description,
+                            amount: line.credit,
+                            isPaid
+                        });
+                    }
+                });
+            });
+
+            const openDebtorsSum = roundCents(debtors.filter(d => !d.isPaid).reduce((s, d) => s + d.amount, 0));
+            const openCreditorsSum = roundCents(creditors.filter(c => !c.isPaid).reduce((s, c) => s + c.amount, 0));
+            const bankBal = roundCents(state.accountBalances['1100'] || 0);
+
+            document.getElementById('openDebtorsTotal').textContent = formatEuro(openDebtorsSum);
+            document.getElementById('openCreditorsTotal').textContent = formatEuro(openCreditorsSum);
+            document.getElementById('bankBalanceTotal').textContent = formatEuro(bankBal);
+
+            // Render Debiteuren
+            const visibleDebtors = showPaid ? debtors : debtors.filter(d => !d.isPaid);
+            const debBody = document.getElementById('debtorsTableBody');
+            if (visibleDebtors.length === 0) {
+                debBody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: var(--text-muted); padding: 24px;">Geen openstaande debiteurenfacturen gevonden.</td></tr>`;
+            } else {
+                debBody.innerHTML = visibleDebtors.map(item => {
+                    const statusHtml = buildDueStatusBadge(item.isPaid, item.dueDate, todayStr);
+                    const actionsHtml = item.isPaid
+                        ? `<span style="font-size: 12px; color: var(--text-muted);">Afgeletterd via bank</span>`
+                        : `
+                            <button class="btn btn-sm" onclick="copyPaymentReminder(${item.entryId})">Herinnering</button>
+                            <button class="btn btn-sm btn-success" onclick="settleOpenItem(${item.entryId}, '1300')">Markeer betaald</button>
+                        `;
+                    return `
+                        <tr>
+                            <td class="mono" style="color: var(--text-muted);">#${item.entryId}</td>
+                            <td class="mono">${escapeHtml(item.date)}</td>
+                            <td class="mono">${escapeHtml(item.dueDate)}</td>
+                            <td style="font-weight: 500;">${escapeHtml(item.description)}</td>
+                            <td>${statusHtml}</td>
+                            <td class="mono text-right" style="font-weight: 600;">${formatEuro(item.amount)}</td>
+                            <td class="text-right" style="display: flex; gap: 6px; justify-content: flex-end;">${actionsHtml}</td>
+                        </tr>
+                    `;
+                }).join('');
+            }
+
+            // Render Crediteuren
+            const visibleCreditors = showPaid ? creditors : creditors.filter(c => !c.isPaid);
+            const credBody = document.getElementById('creditorsTableBody');
+            if (visibleCreditors.length === 0) {
+                credBody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: var(--text-muted); padding: 24px;">Geen openstaande crediteurenfacturen gevonden.</td></tr>`;
+            } else {
+                credBody.innerHTML = visibleCreditors.map(item => {
+                    const statusHtml = buildDueStatusBadge(item.isPaid, item.dueDate, todayStr);
+                    const actionsHtml = item.isPaid
+                        ? `<span style="font-size: 12px; color: var(--text-muted);">Afgeletterd via bank</span>`
+                        : `<button class="btn btn-sm btn-primary" onclick="settleOpenItem(${item.entryId}, '1600')">Betaal via bank</button>`;
+                    return `
+                        <tr>
+                            <td class="mono" style="color: var(--text-muted);">#${item.entryId}</td>
+                            <td class="mono">${escapeHtml(item.date)}</td>
+                            <td class="mono">${escapeHtml(item.dueDate)}</td>
+                            <td style="font-weight: 500;">${escapeHtml(item.description)}</td>
+                            <td>${statusHtml}</td>
+                            <td class="mono text-right" style="font-weight: 600;">${formatEuro(item.amount)}</td>
+                            <td class="text-right">${actionsHtml}</td>
+                        </tr>
+                    `;
+                }).join('');
+            }
+        }
+
+        function buildDueStatusBadge(isPaid, dueDate, todayStr) {
+            if (isPaid) {
+                return `<span class="badge badge-opbrengsten">Voldaan</span>`;
+            }
+            const diff = daysBetween(todayStr, dueDate);
+            if (diff < 0) {
+                return `<span class="badge badge-kosten">${Math.abs(diff)} dagen te laat</span>`;
+            } else if (diff <= 3) {
+                return `<span class="badge badge-passiva">Vervalt over ${diff} dgn</span>`;
+            } else {
+                return `<span class="badge badge-activa">Open (nog ${diff} dgn)</span>`;
+            }
+        }
+
+        // Afletteren: maakt automatisch een bankboeking aan en markeert de factuur als betaald
+        async function settleOpenItem(entryId, accountCode) {
+            const entry = state.entries.find(e => e.id === entryId);
+            if (!entry || entry.paid) return;
+
+            const isDebtor = accountCode === '1300';
+            const line = entry.lines.find(l => l.accountCode === accountCode);
+            const amount = isDebtor ? line.debit : line.credit;
+            const todayStr = new Date().toISOString().split('T')[0];
+
+            const bankLines = isDebtor
+                ? [
+                    { accountCode: '1100', memo: `Ontvangst factuur #${entry.id}`, debit: amount, credit: 0 },
+                    { accountCode: '1300', memo: `Aflettering ${entry.description}`, debit: 0, credit: amount }
+                ]
+                : [
+                    { accountCode: '1600', memo: `Aflettering ${entry.description}`, debit: amount, credit: 0 },
+                    { accountCode: '1100', memo: `Betaling boeking #${entry.id}`, debit: 0, credit: amount }
+                ];
+
+            await saveEntryToDB({
+                date: todayStr,
+                description: `${isDebtor ? 'Ontvangst' : 'Betaling'}: ${entry.description} (#${entry.id})`,
+                journalType: 'Bank',
+                lines: bankLines,
+                createdAt: new Date().toISOString()
+            });
+
+            entry.paid = true;
+            entry.paidDate = todayStr;
+            await updateEntryInDB(entry);
+            await refreshAllData();
+            showToast(`Post #${entry.id} afgeletterd op Zakelijke Bankrekening (1100).`);
+        }
+
+        function copyPaymentReminder(entryId) {
+            const entry = state.entries.find(e => e.id === entryId);
+            if (!entry) return;
+            const line = entry.lines.find(l => l.accountCode === '1300');
+            const amount = line ? formatEuro(line.debit) : '';
+            const dueDate = entry.dueDate || addDaysToDate(entry.date, 14);
+
+            const reminderText = [
+                `Onderwerp: Betalingsherinnering — ${entry.description}`,
+                ``,
+                `Beste relatie,`,
+                ``,
+                `Uit onze administratie blijkt dat onderstaande factuur nog openstaat:`,
+                `- Omschrijving: ${entry.description} (Boekingsnr. #${entry.id})`,
+                `- Factuurdatum: ${entry.date}`,
+                `- Vervaldatum: ${dueDate}`,
+                `- Openstaand bedrag: ${amount}`,
+                ``,
+                `Wij verzoeken u vriendelijk dit bedrag binnen 7 dagen over te maken onder vermelding van het boekingsnummer. Mocht uw betaling inmiddels zijn voldaan, dan kunt u dit bericht als niet verzonden beschouwen.`,
+                ``,
+                `Met vriendelijke groet,`
+            ].join('\n');
+
+            navigator.clipboard.writeText(reminderText).then(() => {
+                showToast('Betalingsherinnering gekopieerd naar klembord.');
+            });
+        }
+
+        document.getElementById('showPaidInvoices').addEventListener('change', renderOpenItems);
+
         /* === BTW-AANGIFTE BEREKENING (NEDERLANDS MODEL) === */
         function entryMatchesQuarter(dateStr, quarter) {
             if (quarter === 'ALL') return true;
@@ -1316,13 +1601,12 @@
             const filteredEntries = state.entries.filter(e => entryMatchesQuarter(e.date, quarter));
             document.getElementById('vatPeriodSub').textContent = `Geselecteerde periode: ${quarterNames[quarter]} (${filteredEntries.length} boekingen meegenomen)`;
 
-            // Verzamel bewegingen binnen de gekozen periode
-            let base21 = 0; // Omzet 21% (rekeningen met defaultVat '21' in Opbrengsten)
-            let base9 = 0;  // Omzet 9% (rekeningen met defaultVat '9' in Opbrengsten)
-            let base0 = 0;  // Omzet 0% (rekeningen met defaultVat '0' in Opbrengsten)
-            let vat21 = 0;  // Rekening 1510 (Credit - Debet)
-            let vat9 = 0;   // Rekening 1520 (Credit - Debet)
-            let vatInput = 0; // Rekening 1530 Voorbelasting (Debet - Credit)
+            let base21 = 0;
+            let base9 = 0;
+            let base0 = 0;
+            let vat21 = 0;
+            let vat9 = 0;
+            let vatInput = 0;
 
             filteredEntries.forEach(entry => {
                 entry.lines.forEach(line => {
@@ -1344,8 +1628,6 @@
                 });
             });
 
-            // Belastingdienst afrondingsregels:
-            // Omzet en verschuldigde BTW naar beneden afronden op hele euro's; voorbelasting naar boven afronden.
             const dispBase21 = useBdRounding ? Math.floor(base21) : base21;
             const dispVat21 = useBdRounding ? Math.floor(vat21) : vat21;
             const dispBase9 = useBdRounding ? Math.floor(base9) : base9;
@@ -1357,7 +1639,6 @@
             const total5g = roundCents(total5a - disp5b);
             const totalBase = roundCents(dispBase21 + dispBase9 + dispBase0);
 
-            // KPI kaarten bovenin BTW-scherm
             document.getElementById('vatCardBase').textContent = formatEuro(totalBase, useBdRounding);
             document.getElementById('vatCard5a').textContent = formatEuro(total5a, useBdRounding);
             document.getElementById('vatCard5b').textContent = formatEuro(disp5b, useBdRounding);
@@ -1374,7 +1655,6 @@
                 card5gVal.style.color = 'var(--success)';
             }
 
-            // Tabel opbouwen
             const tbody = document.getElementById('vatReturnTableBody');
             tbody.innerHTML = `
                 <tr class="vat-section-row"><td colspan="4">Rubriek 1: Prestaties binnenland</td></tr>
@@ -1418,7 +1698,6 @@
                 </tr>
             `;
 
-            // Tekst klaarzetten voor kopieerknop
             state.lastVatReportText = [
                 `BTW-Aangifte Cijferwerk — ${quarterNames[quarter]}`,
                 `1a Hoog tarief (21%): Grondslag ${formatEuro(dispBase21, useBdRounding)} | BTW ${formatEuro(dispVat21, useBdRounding)}`,
@@ -1536,6 +1815,7 @@
             document.getElementById('entryDate').value = new Date().toISOString().split('T')[0];
             document.getElementById('entryDesc').value = '';
             document.getElementById('entryJournalType').value = 'Inkoop';
+            document.getElementById('entryTermDays').value = '14';
             state.draftLines = [
                 { accountCode: '4300', memo: '', debit: 0, credit: 0 },
                 { accountCode: '1600', memo: '', debit: 0, credit: 0 }
@@ -1685,6 +1965,7 @@
             const date = document.getElementById('entryDate').value;
             const description = document.getElementById('entryDesc').value.trim();
             const journalType = document.getElementById('entryJournalType').value;
+            const termDays = parseInt(document.getElementById('entryTermDays').value, 10);
 
             if (!date || !description) {
                 showToast('Vul een boekdatum en omschrijving in.');
@@ -1703,6 +1984,9 @@
             try {
                 await saveEntryToDB({
                     date,
+                    dueDate: addDaysToDate(date, termDays),
+                    termDays,
+                    paid: termDays === 0,
                     description,
                     journalType,
                     lines: validLines,
@@ -1711,7 +1995,7 @@
                 document.getElementById('nlpInput').value = '';
                 resetJournalForm();
                 await refreshAllData();
-                showToast('Journaalpost opgeslagen en BTW-overzicht bijgewerkt.');
+                showToast('Journaalpost opgeslagen en overzichten bijgewerkt.');
             } catch (err) {
                 showToast(err.message);
             }

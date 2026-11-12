@@ -1,0 +1,704 @@
+<!DOCTYPE html>
+<html lang="nl" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cijferwerk — Professionele Boekhoudsoftware</title>
+    <style>
+        /* === DESIGN TOKENS & THEMA'S === */
+        :root {
+            --bg-app: #f4f5f7;
+            --bg-surface: #ffffff;
+            --bg-sidebar: #111827;
+            --bg-sidebar-hover: #1f2937;
+            --bg-sidebar-active: #2563eb;
+            --border-color: #e5e7eb;
+            --text-main: #111827;
+            --text-muted: #6b7280;
+            --text-sidebar: #d1d5db;
+            --text-sidebar-active: #ffffff;
+            --accent: #2563eb;
+            --accent-hover: #1d4ed8;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+            --shadow-lg: 0 20px 25px -5px rgba(0, 0, 0, 0.15), 0 10px 10px -5px rgba(0, 0, 0, 0.08);
+            --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            --font-mono: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+        }
+
+        [data-theme="dark"] {
+            --bg-app: #0f172a;
+            --bg-surface: #1e293b;
+            --bg-sidebar: #090d16;
+            --bg-sidebar-hover: #1e293b;
+            --bg-sidebar-active: #3b82f6;
+            --border-color: #334155;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --accent: #3b82f6;
+            --accent-hover: #60a5fa;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: var(--font-sans);
+            background-color: var(--bg-app);
+            color: var(--text-main);
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            user-select: none;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        /* === DESKTOP WORKSPACE LAYOUT === */
+        .app-container {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+
+        /* Zijbalk */
+        .sidebar {
+            width: 240px;
+            background-color: var(--bg-sidebar);
+            color: var(--text-sidebar);
+            display: flex;
+            flex-direction: column;
+            border-right: 1px solid var(--border-color);
+            flex-shrink: 0;
+        }
+
+        .brand-header {
+            height: 56px;
+            display: flex;
+            align-items: center;
+            padding: 0 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            gap: 10px;
+        }
+
+        .brand-logo {
+            width: 28px;
+            height: 28px;
+            background: var(--accent);
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 700;
+            font-family: var(--font-mono);
+            font-size: 15px;
+        }
+
+        .brand-name {
+            font-weight: 600;
+            font-size: 16px;
+            color: #ffffff;
+            letter-spacing: -0.01em;
+        }
+
+        .nav-section {
+            padding: 16px 12px;
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        .nav-label {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            color: #6b7280;
+            padding: 0 8px 8px;
+            font-weight: 600;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 9px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            margin-bottom: 2px;
+            transition: background-color 0.15s, color 0.15s;
+            font-weight: 500;
+        }
+
+        .nav-item:hover {
+            background-color: var(--bg-sidebar-hover);
+            color: #ffffff;
+        }
+
+        .nav-item.active {
+            background-color: var(--bg-sidebar-active);
+            color: var(--text-sidebar-active);
+        }
+
+        .nav-shortcut {
+            font-family: var(--font-mono);
+            font-size: 11px;
+            opacity: 0.6;
+        }
+
+        .sidebar-footer {
+            padding: 14px 16px;
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+            font-size: 12px;
+            color: #9ca3af;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        /* Hoofdgebied */
+        .main-wrapper {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* Bovenste Werkbalk */
+        .topbar {
+            height: 56px;
+            background-color: var(--bg-surface);
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 24px;
+            flex-shrink: 0;
+        }
+
+        .view-title {
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .topbar-actions {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .cmd-trigger {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            width: 280px;
+            padding: 6px 12px;
+            background-color: var(--bg-app);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            color: var(--text-muted);
+            cursor: pointer;
+            font-size: 13px;
+            transition: border-color 0.15s;
+        }
+
+        .cmd-trigger:hover {
+            border-color: var(--accent);
+        }
+
+        .kbd-badge {
+            font-family: var(--font-mono);
+            font-size: 11px;
+            background: var(--bg-surface);
+            border: 1px solid var(--border-color);
+            padding: 1px 5px;
+            border-radius: 4px;
+            color: var(--text-main);
+        }
+
+        .btn {
+            padding: 7px 14px;
+            border-radius: 6px;
+            border: 1px solid var(--border-color);
+            background-color: var(--bg-surface);
+            color: var(--text-main);
+            font-weight: 500;
+            font-size: 13px;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.15s;
+        }
+
+        .btn:hover {
+            background-color: var(--bg-app);
+        }
+
+        .btn-primary {
+            background-color: var(--accent);
+            border-color: var(--accent);
+            color: #ffffff;
+        }
+
+        .btn-primary:hover {
+            background-color: var(--accent-hover);
+        }
+
+        /* Werkveld (Views) */
+        .workspace {
+            flex: 1;
+            padding: 24px;
+            overflow-y: auto;
+        }
+
+        .view-section {
+            display: none;
+            max-width: 1280px;
+            margin: 0 auto;
+        }
+
+        .view-section.active {
+            display: block;
+        }
+
+        /* Placeholder Kaarten voor Stap 1 */
+        .grid-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .card {
+            background-color: var(--bg-surface);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .card-label {
+            font-size: 12px;
+            color: var(--text-muted);
+            font-weight: 500;
+            margin-bottom: 6px;
+        }
+
+        .card-value {
+            font-size: 24px;
+            font-weight: 700;
+            font-family: var(--font-mono);
+        }
+
+        .empty-state {
+            background-color: var(--bg-surface);
+            border: 1px dashed var(--border-color);
+            border-radius: 8px;
+            padding: 48px 24px;
+            text-align: center;
+            color: var(--text-muted);
+        }
+
+        .empty-state h3 {
+            color: var(--text-main);
+            margin-bottom: 8px;
+            font-size: 16px;
+        }
+
+        /* Statusbalk onderin */
+        .statusbar {
+            height: 28px;
+            background-color: var(--bg-surface);
+            border-top: 1px solid var(--border-color);
+            padding: 0 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 12px;
+            color: var(--text-muted);
+            flex-shrink: 0;
+        }
+
+        .status-dot {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: var(--success);
+            margin-right: 6px;
+        }
+
+        /* === COMMAND PALETTE MODAL === */
+        .modal-backdrop {
+            position: fixed;
+            inset: 0;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: none;
+            align-items: flex-start;
+            justify-content: center;
+            padding-top: 12vh;
+            z-index: 1000;
+        }
+
+        .modal-backdrop.open {
+            display: flex;
+        }
+
+        .cmd-modal {
+            width: 100%;
+            max-width: 560px;
+            background-color: var(--bg-surface);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            box-shadow: var(--shadow-lg);
+            overflow: hidden;
+        }
+
+        .cmd-input-wrapper {
+            padding: 14px 16px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+        }
+
+        .cmd-input {
+            width: 100%;
+            border: none;
+            background: transparent;
+            color: var(--text-main);
+            font-size: 15px;
+            outline: none;
+            font-family: var(--font-sans);
+        }
+
+        .cmd-results {
+            max-height: 320px;
+            overflow-y: auto;
+            padding: 8px;
+        }
+
+        .cmd-item {
+            padding: 10px 12px;
+            border-radius: 6px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            color: var(--text-main);
+        }
+
+        .cmd-item.selected, .cmd-item:hover {
+            background-color: var(--accent);
+            color: #ffffff;
+        }
+
+        .cmd-item.selected .cmd-category, .cmd-item:hover .cmd-category {
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        .cmd-category {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="app-container">
+        <!-- ZIJBALK NAVIGATIE -->
+        <aside class="sidebar">
+            <div class="brand-header">
+                <div class="brand-logo">CW</div>
+                <span class="brand-name">Cijferwerk</span>
+            </div>
+
+            <nav class="nav-section">
+                <div class="nav-label">Administratie</div>
+                <div class="nav-item active" data-view="dashboard">
+                    <span>Overzicht & Balans</span>
+                    <span class="nav-shortcut">G D</span>
+                </div>
+                <div class="nav-item" data-view="journaal">
+                    <span>Journaal & Snelboeken</span>
+                    <span class="nav-shortcut">G J</span>
+                </div>
+                <div class="nav-item" data-view="relaties">
+                    <span>Debiteuren & Crediteuren</span>
+                    <span class="nav-shortcut">G R</span>
+                </div>
+                <div class="nav-item" data-view="btw">
+                    <span>BTW-Aangifte</span>
+                    <span class="nav-shortcut">G B</span>
+                </div>
+
+                <div class="nav-label" style="margin-top: 20px;">Systeem</div>
+                <div class="nav-item" data-view="grootboek">
+                    <span>Grootboekschema</span>
+                    <span class="nav-shortcut">G G</span>
+                </div>
+                <div class="nav-item" data-view="backup">
+                    <span>Archief & Back-up</span>
+                    <span class="nav-shortcut">G A</span>
+                </div>
+            </nav>
+
+            <div class="sidebar-footer">
+                <span>Boekjaar 2026</span>
+                <button class="btn" id="themeToggle" style="padding: 3px 8px; font-size: 11px;">Thema</button>
+            </div>
+        </aside>
+
+        <!-- HOOFDSCHERM -->
+        <div class="main-wrapper">
+            <header class="topbar">
+                <h1 class="view-title" id="currentViewTitle">Overzicht & Balans</h1>
+                
+                <div class="topbar-actions">
+                    <div class="cmd-trigger" id="openCmdBtn">
+                        <span>Zoek actie of scherm...</span>
+                        <span class="kbd-badge">Ctrl K</span>
+                    </div>
+                    <button class="btn btn-primary" id="quickEntryBtn">+ Nieuwe boeking</button>
+                </div>
+            </header>
+
+            <main class="workspace">
+                <!-- VIEW: DASHBOARD -->
+                <section id="view-dashboard" class="view-section active">
+                    <div class="grid-cards">
+                        <div class="card">
+                            <div class="card-label">Netto Omzet (Excl. BTW)</div>
+                            <div class="card-value">€ 0,00</div>
+                        </div>
+                        <div class="card">
+                            <div class="card-label">Kosten (Excl. BTW)</div>
+                            <div class="card-value">€ 0,00</div>
+                        </div>
+                        <div class="card">
+                            <div class="card-label">Te betalen BTW (Kwartaal)</div>
+                            <div class="card-value">€ 0,00</div>
+                        </div>
+                        <div class="card">
+                            <div class="card-label">Vrij besteedbaar resultaat</div>
+                            <div class="card-value" style="color: var(--success);">€ 0,00</div>
+                        </div>
+                    </div>
+                    <div class="empty-state">
+                        <h3>Stap 1 voltooid: Desktop-interface staat klaar</h3>
+                        <p>Gebruik <strong>Ctrl+K</strong> (of Cmd+K op Mac) om het Command Palette te testen en tussen schermen te schakelen.</p>
+                    </div>
+                </section>
+
+                <!-- VIEW: JOURNAAL -->
+                <section id="view-journaal" class="view-section">
+                    <div class="empty-state">
+                        <h3>Journaal & Snel-invoer</h3>
+                        <p>In de volgende stap bouwen we hier de database-opslag (IndexedDB) en de slimme snel-invoerregel.</p>
+                    </div>
+                </section>
+
+                <!-- VIEW: RELATIES -->
+                <section id="view-relaties" class="view-section">
+                    <div class="empty-state">
+                        <h3>Debiteuren & Crediteuren</h3>
+                        <p>Hier verschijnt straks het overzicht van openstaande facturen, vervaldatums en herinneringsteksten.</p>
+                    </div>
+                </section>
+
+                <!-- VIEW: BTW -->
+                <section id="view-btw" class="view-section">
+                    <div class="empty-state">
+                        <h3>BTW-Aangifte (Nederlands Model)</h3>
+                        <p>Realtime berekening van rubrieken 1a, 1b, 5a en 5b op basis van jouw boekingen.</p>
+                    </div>
+                </section>
+
+                <!-- VIEW: GROOTBOEK -->
+                <section id="view-grootboek" class="view-section">
+                    <div class="empty-state">
+                        <h3>Grootboekrekeningen</h3>
+                        <p>Standaard Nederlands grootboekschema (activa, passiva, kosten en opbrengsten).</p>
+                    </div>
+                </section>
+
+                <!-- VIEW: BACKUP -->
+                <section id="view-backup" class="view-section">
+                    <div class="empty-state">
+                        <h3>Archief & Auditfile Back-up</h3>
+                        <p>Exporteer en importeer hier je volledige administratie inclusief gekoppelde bonnen.</p>
+                    </div>
+                </section>
+            </main>
+
+            <!-- STATUSBAR -->
+            <footer class="statusbar">
+                <div><span class="status-dot"></span>Lokale database gereed (Offline-first)</div>
+                <div id="clockDisplay"></div>
+            </footer>
+        </div>
+    </div>
+
+    <!-- COMMAND PALETTE MODAL -->
+    <div class="modal-backdrop" id="cmdBackdrop">
+        <div class="cmd-modal" role="dialog" aria-modal="true">
+            <div class="cmd-input-wrapper">
+                <input type="text" class="cmd-input" id="cmdInput" placeholder="Typ een opdracht of schermnaam..." autocomplete="off">
+            </div>
+            <div class="cmd-results" id="cmdResults"></div>
+        </div>
+    </div>
+
+    <script>
+        /* === STAP 1: UI NAVIGATIE, THEMA & COMMAND PALETTE === */
+        const state = {
+            currentView: 'dashboard',
+            selectedCmdIndex: 0
+        };
+
+        const viewTitles = {
+            dashboard: 'Overzicht & Balans',
+            journaal: 'Journaal & Snelboeken',
+            relaties: 'Debiteuren & Crediteuren',
+            btw: 'BTW-Aangifte',
+            grootboek: 'Grootboekschema',
+            backup: 'Archief & Back-up'
+        };
+
+        const commands = [
+            { id: 'nav-dashboard', label: 'Ga naar Overzicht & Balans', category: 'Navigatie', action: () => switchView('dashboard') },
+            { id: 'nav-journaal', label: 'Ga naar Journaal & Snelboeken', category: 'Navigatie', action: () => switchView('journaal') },
+            { id: 'nav-relaties', label: 'Ga naar Debiteuren & Crediteuren', category: 'Navigatie', action: () => switchView('relaties') },
+            { id: 'nav-btw', label: 'Ga naar BTW-Aangifte', category: 'Navigatie', action: () => switchView('btw') },
+            { id: 'nav-grootboek', label: 'Ga naar Grootboekschema', category: 'Navigatie', action: () => switchView('grootboek') },
+            { id: 'nav-backup', label: 'Ga naar Archief & Back-up', category: 'Navigatie', action: () => switchView('backup') },
+            { id: 'act-theme', label: 'Wissel tussen Licht en Donker thema', category: 'Weergave', action: () => toggleTheme() }
+        ];
+
+        // Scherm wisselen
+        function switchView(viewName) {
+            if (!viewTitles[viewName]) return;
+            state.currentView = viewName;
+
+            document.querySelectorAll('.nav-item').forEach(el => {
+                el.classList.toggle('active', el.dataset.view === viewName);
+            });
+
+            document.querySelectorAll('.view-section').forEach(el => {
+                el.classList.toggle('active', el.id === `view-${viewName}`);
+            });
+
+            document.getElementById('currentViewTitle').textContent = viewTitles[viewName];
+        }
+
+        // Thema wisselen
+        function toggleTheme() {
+            const html = document.documentElement;
+            const next = html.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
+            html.setAttribute('data-theme', next);
+            localStorage.setItem('cijferwerk_theme', next);
+        }
+
+        // Command Palette logica
+        const cmdBackdrop = document.getElementById('cmdBackdrop');
+        const cmdInput = document.getElementById('cmdInput');
+        const cmdResults = document.getElementById('cmdResults');
+        let filteredCommands = [...commands];
+
+        function openCommandPalette() {
+            cmdBackdrop.classList.add('open');
+            cmdInput.value = '';
+            filteredCommands = [...commands];
+            state.selectedCmdIndex = 0;
+            renderCommands();
+            cmdInput.focus();
+        }
+
+        function closeCommandPalette() {
+            cmdBackdrop.classList.remove('open');
+        }
+
+        function renderCommands() {
+            cmdResults.innerHTML = '';
+            filteredCommands.forEach((cmd, index) => {
+                const div = document.createElement('div');
+                div.className = `cmd-item ${index === state.selectedCmdIndex ? 'selected' : ''}`;
+                div.innerHTML = `
+                    <span>${cmd.label}</span>
+                    <span class="cmd-category">${cmd.category}</span>
+                `;
+                div.addEventListener('click', () => {
+                    cmd.action();
+                    closeCommandPalette();
+                });
+                cmdResults.appendChild(div);
+            });
+        }
+
+        cmdInput.addEventListener('input', (e) => {
+            const q = e.target.value.toLowerCase();
+            filteredCommands = commands.filter(c => 
+                c.label.toLowerCase().includes(q) || c.category.toLowerCase().includes(q)
+            );
+            state.selectedCmdIndex = 0;
+            renderCommands();
+        });
+
+        cmdInput.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                state.selectedCmdIndex = (state.selectedCmdIndex + 1) % Math.max(1, filteredCommands.length);
+                renderCommands();
+            } else if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                state.selectedCmdIndex = (state.selectedCmdIndex - 1 + filteredCommands.length) % Math.max(1, filteredCommands.length);
+                renderCommands();
+            } else if (e.key === 'Enter' && filteredCommands[state.selectedCmdIndex]) {
+                e.preventDefault();
+                filteredCommands[state.selectedCmdIndex].action();
+                closeCommandPalette();
+            } else if (e.key === 'Escape') {
+                closeCommandPalette();
+            }
+        });
+
+        // Event Listeners
+        document.querySelectorAll('.nav-item').forEach(item => {
+            item.addEventListener('click', () => switchView(item.dataset.view));
+        });
+
+        document.getElementById('themeToggle').addEventListener('click', toggleTheme);
+        document.getElementById('openCmdBtn').addEventListener('click', openCommandPalette);
+        document.getElementById('quickEntryBtn').addEventListener('click', () => switchView('journaal'));
+        cmdBackdrop.addEventListener('click', (e) => {
+            if (e.target === cmdBackdrop) closeCommandPalette();
+        });
+
+        // Globale sneltoets Ctrl+K / Cmd+K
+        document.addEventListener('keydown', (e) => {
+            if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+                e.preventDefault();
+                cmdBackdrop.classList.contains('open') ? closeCommandPalette() : openCommandPalette();
+            }
+        });
+
+        // Klok en opgeslagen thema laden
+        const savedTheme = localStorage.getItem('cijferwerk_theme');
+        if (savedTheme) document.documentElement.setAttribute('data-theme', savedTheme);
+
+        function updateClock() {
+            const now = new Date();
+            document.getElementById('clockDisplay').textContent = now.toLocaleDateString('nl-NL', {
+                weekday: 'short', day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit'
+            });
+        }
+        updateClock();
+        setInterval(updateClock, 30000);
+    </script>
+</body>
+</html>

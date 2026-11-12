@@ -239,6 +239,7 @@
             gap: 6px;
             transition: all 0.15s;
             font-family: var(--font-sans);
+            white-space: nowrap;
         }
 
         .btn:hover:not(:disabled) {
@@ -481,6 +482,33 @@
         .balance-err {
             background-color: var(--danger-soft);
             color: var(--danger);
+        }
+
+        /* BTW Rubrieken styling */
+        .vat-section-row td {
+            background-color: var(--bg-subtle);
+            font-weight: 700;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            color: var(--text-muted);
+            padding-top: 14px;
+            padding-bottom: 8px;
+        }
+
+        .vat-total-row td {
+            background-color: var(--accent-soft);
+            font-weight: 700;
+            border-top: 2px solid var(--accent);
+        }
+
+        .checkbox-label {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 13px;
+            color: var(--text-main);
+            cursor: pointer;
         }
 
         @media (max-width: 900px) {
@@ -813,7 +841,6 @@
                             </div>
                         </div>
 
-                        <!-- Natural Language Input -->
                         <div class="nlp-box">
                             <div class="nlp-input-row">
                                 <input type="text" class="input nlp-input" id="nlpInput" placeholder="Bijv: 12-11 KPN Zakelijk 54,45 21% telefoon — druk op Enter">
@@ -827,7 +854,6 @@
                             </div>
                         </div>
 
-                        <!-- Boekingskop -->
                         <div class="entry-meta-grid">
                             <div class="field-group">
                                 <label class="field-label" for="entryDate">Boekdatum</label>
@@ -848,7 +874,6 @@
                             </div>
                         </div>
 
-                        <!-- Journaalregels (Debet / Credit) -->
                         <div class="journal-lines-wrap">
                             <div style="display: grid; grid-template-columns: 2fr 1.5fr 130px 130px 36px; gap: 10px; margin-bottom: 6px;">
                                 <span class="field-label">Grootboekrekening</span>
@@ -864,7 +889,6 @@
                             </div>
                         </div>
 
-                        <!-- Live Balanscontrole -->
                         <div class="journal-footer">
                             <div class="balance-indicator">
                                 <span>Debet: <strong id="totalDebitDisplay">€ 0,00</strong></span>
@@ -875,7 +899,6 @@
                         </div>
                     </div>
 
-                    <!-- Lijst met opgeslagen boekingen -->
                     <div class="panel">
                         <div class="panel-header">
                             <div class="panel-title">Journaalregister (<span id="entryCountLabel">0</span> boekingen)</div>
@@ -908,11 +931,62 @@
                     </div>
                 </section>
 
-                <!-- VIEW: BTW -->
+                <!-- VIEW: BTW-AANGIFTE -->
                 <section id="view-btw" class="view-section">
-                    <div class="empty-state">
-                        <h3>BTW-Aangifte (Nederlands Model)</h3>
-                        <p>In Stap 4 bouwen we hier de realtime berekening van rubrieken 1a, 1b, 5a en 5b op basis van jouw journaalposten.</p>
+                    <div class="grid-cards" style="grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));">
+                        <div class="card">
+                            <div class="card-label">Belaste Omzet (Rubriek 1)</div>
+                            <div class="card-value" id="vatCardBase">€ 0,00</div>
+                        </div>
+                        <div class="card">
+                            <div class="card-label">Verschuldigde BTW (5a)</div>
+                            <div class="card-value" id="vatCard5a">€ 0,00</div>
+                        </div>
+                        <div class="card">
+                            <div class="card-label">Voorbelasting (5b)</div>
+                            <div class="card-value" id="vatCard5b">€ 0,00</div>
+                        </div>
+                        <div class="card">
+                            <div class="card-label" id="vatCard5gLabel">Totaal te betalen (5g)</div>
+                            <div class="card-value" id="vatCard5g" style="color: var(--accent);">€ 0,00</div>
+                        </div>
+                    </div>
+
+                    <div class="panel">
+                        <div class="panel-header">
+                            <div>
+                                <div class="panel-title">Aangifte Omzetbelasting — Nederlands Model</div>
+                                <div style="font-size: 12px; color: var(--text-muted);" id="vatPeriodSub">Geselecteerde periode: Q4 2026 (okt – dec)</div>
+                            </div>
+                            <div class="toolbar-row">
+                                <label class="checkbox-label">
+                                    <input type="checkbox" id="vatRoundBelastingdienst" checked>
+                                    <span>Afronden zoals Belastingdienst (hele euro's)</span>
+                                </label>
+                                <select class="select" id="vatQuarterSelect" style="width: 210px;">
+                                    <option value="Q1">Kwartaal 1 (jan – mrt 2026)</option>
+                                    <option value="Q2">Kwartaal 2 (apr – jun 2026)</option>
+                                    <option value="Q3">Kwartaal 3 (jul – sep 2026)</option>
+                                    <option value="Q4" selected>Kwartaal 4 (okt – dec 2026)</option>
+                                    <option value="ALL">Heel boekjaar 2026</option>
+                                </select>
+                                <button type="button" class="btn" id="copyVatBtn">Kopieer overzicht</button>
+                            </div>
+                        </div>
+
+                        <div class="table-wrap">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th style="width: 90px;">Rubriek</th>
+                                        <th>Omschrijving Belastingdienst</th>
+                                        <th style="width: 170px; text-align: right;">Omzet / Grondslag</th>
+                                        <th style="width: 170px; text-align: right;">Omzetbelasting (BTW)</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="vatReturnTableBody"></tbody>
+                            </table>
+                        </div>
                     </div>
                 </section>
 
@@ -1016,7 +1090,7 @@
     </div>
 
     <script>
-        /* === STAP 3: DUBBEL BOEKHOUDEN, SLIMME SNEL-INVOER & BALANSBEREKENING === */
+        /* === STAP 4: AUTOMATISCHE BTW-AANGIFTE (NEDERLANDS MODEL) === */
         const DB_NAME = 'CijferwerkDB';
         const DB_VERSION = 1;
 
@@ -1059,13 +1133,19 @@
             draftLines: [],
             currentView: 'dashboard',
             selectedCmdIndex: 0,
-            lastKeyG: false
+            lastKeyG: false,
+            lastVatReportText: ''
         };
 
         // Euro-formattering
-        function formatEuro(amount) {
+        function formatEuro(amount, wholeEuros = false) {
             const val = Math.abs(amount) < 0.005 ? 0 : amount;
-            return new Intl.NumberFormat('nl-NL', { style: 'currency', currency: 'EUR' }).format(val);
+            return new Intl.NumberFormat('nl-NL', {
+                style: 'currency',
+                currency: 'EUR',
+                minimumFractionDigits: wholeEuros ? 0 : 2,
+                maximumFractionDigits: wholeEuros ? 0 : 2
+            }).format(val);
         }
 
         function roundCents(num) {
@@ -1129,6 +1209,7 @@
             renderAccountsTable();
             renderEntriesTable();
             renderDashboard();
+            renderVatReturn();
             updateDbStatus(true);
         }
 
@@ -1181,7 +1262,6 @@
             });
         }
 
-        // Bereken actuele grootboeksaldi & kerncijfers
         function recalculateBalances() {
             const balances = {};
             state.accounts.forEach(a => { balances[a.code] = 0; });
@@ -1189,7 +1269,6 @@
             state.entries.forEach(entry => {
                 entry.lines.forEach(line => {
                     if (balances[line.accountCode] === undefined) balances[line.accountCode] = 0;
-                    // Debet is +, Credit is -
                     balances[line.accountCode] = roundCents(balances[line.accountCode] + (line.debit - line.credit));
                 });
             });
@@ -1209,6 +1288,156 @@
             }
         }
 
+        /* === BTW-AANGIFTE BEREKENING (NEDERLANDS MODEL) === */
+        function entryMatchesQuarter(dateStr, quarter) {
+            if (quarter === 'ALL') return true;
+            const parts = dateStr.split('-');
+            if (parts.length < 2) return false;
+            const month = parseInt(parts[1], 10);
+            if (quarter === 'Q1') return month >= 1 && month <= 3;
+            if (quarter === 'Q2') return month >= 4 && month <= 6;
+            if (quarter === 'Q3') return month >= 7 && month <= 9;
+            if (quarter === 'Q4') return month >= 10 && month <= 12;
+            return true;
+        }
+
+        function renderVatReturn() {
+            const quarter = document.getElementById('vatQuarterSelect').value;
+            const useBdRounding = document.getElementById('vatRoundBelastingdienst').checked;
+
+            const quarterNames = {
+                Q1: 'Kwartaal 1 2026 (jan – mrt)',
+                Q2: 'Kwartaal 2 2026 (apr – jun)',
+                Q3: 'Kwartaal 3 2026 (jul – sep)',
+                Q4: 'Kwartaal 4 2026 (okt – dec)',
+                ALL: 'Heel boekjaar 2026'
+            };
+
+            const filteredEntries = state.entries.filter(e => entryMatchesQuarter(e.date, quarter));
+            document.getElementById('vatPeriodSub').textContent = `Geselecteerde periode: ${quarterNames[quarter]} (${filteredEntries.length} boekingen meegenomen)`;
+
+            // Verzamel bewegingen binnen de gekozen periode
+            let base21 = 0; // Omzet 21% (rekeningen met defaultVat '21' in Opbrengsten)
+            let base9 = 0;  // Omzet 9% (rekeningen met defaultVat '9' in Opbrengsten)
+            let base0 = 0;  // Omzet 0% (rekeningen met defaultVat '0' in Opbrengsten)
+            let vat21 = 0;  // Rekening 1510 (Credit - Debet)
+            let vat9 = 0;   // Rekening 1520 (Credit - Debet)
+            let vatInput = 0; // Rekening 1530 Voorbelasting (Debet - Credit)
+
+            filteredEntries.forEach(entry => {
+                entry.lines.forEach(line => {
+                    const acc = state.accounts.find(a => a.code === line.accountCode);
+                    const netCredit = roundCents(line.credit - line.debit);
+                    const netDebit = roundCents(line.debit - line.credit);
+
+                    if (line.accountCode === '1510') {
+                        vat21 = roundCents(vat21 + netCredit);
+                    } else if (line.accountCode === '1520') {
+                        vat9 = roundCents(vat9 + netCredit);
+                    } else if (line.accountCode === '1530') {
+                        vatInput = roundCents(vatInput + netDebit);
+                    } else if (acc && acc.category === 'Opbrengsten') {
+                        if (acc.defaultVat === '21') base21 = roundCents(base21 + netCredit);
+                        else if (acc.defaultVat === '9') base9 = roundCents(base9 + netCredit);
+                        else base0 = roundCents(base0 + netCredit);
+                    }
+                });
+            });
+
+            // Belastingdienst afrondingsregels:
+            // Omzet en verschuldigde BTW naar beneden afronden op hele euro's; voorbelasting naar boven afronden.
+            const dispBase21 = useBdRounding ? Math.floor(base21) : base21;
+            const dispVat21 = useBdRounding ? Math.floor(vat21) : vat21;
+            const dispBase9 = useBdRounding ? Math.floor(base9) : base9;
+            const dispVat9 = useBdRounding ? Math.floor(vat9) : vat9;
+            const dispBase0 = useBdRounding ? Math.floor(base0) : base0;
+
+            const total5a = roundCents(dispVat21 + dispVat9);
+            const disp5b = useBdRounding ? Math.ceil(vatInput) : vatInput;
+            const total5g = roundCents(total5a - disp5b);
+            const totalBase = roundCents(dispBase21 + dispBase9 + dispBase0);
+
+            // KPI kaarten bovenin BTW-scherm
+            document.getElementById('vatCardBase').textContent = formatEuro(totalBase, useBdRounding);
+            document.getElementById('vatCard5a').textContent = formatEuro(total5a, useBdRounding);
+            document.getElementById('vatCard5b').textContent = formatEuro(disp5b, useBdRounding);
+
+            const card5gLabel = document.getElementById('vatCard5gLabel');
+            const card5gVal = document.getElementById('vatCard5g');
+            if (total5g >= 0) {
+                card5gLabel.textContent = 'Totaal te betalen (5g)';
+                card5gVal.textContent = formatEuro(total5g, useBdRounding);
+                card5gVal.style.color = 'var(--accent)';
+            } else {
+                card5gLabel.textContent = 'Totaal terug te vragen (5g)';
+                card5gVal.textContent = formatEuro(Math.abs(total5g), useBdRounding);
+                card5gVal.style.color = 'var(--success)';
+            }
+
+            // Tabel opbouwen
+            const tbody = document.getElementById('vatReturnTableBody');
+            tbody.innerHTML = `
+                <tr class="vat-section-row"><td colspan="4">Rubriek 1: Prestaties binnenland</td></tr>
+                <tr>
+                    <td class="mono" style="font-weight: 600;">1a</td>
+                    <td>Leveringen/diensten belast met hoog tarief (21%)</td>
+                    <td class="mono text-right">${formatEuro(dispBase21, useBdRounding)}</td>
+                    <td class="mono text-right">${formatEuro(dispVat21, useBdRounding)}</td>
+                </tr>
+                <tr>
+                    <td class="mono" style="font-weight: 600;">1b</td>
+                    <td>Leveringen/diensten belast met laag tarief (9%)</td>
+                    <td class="mono text-right">${formatEuro(dispBase9, useBdRounding)}</td>
+                    <td class="mono text-right">${formatEuro(dispVat9, useBdRounding)}</td>
+                </tr>
+                <tr>
+                    <td class="mono" style="font-weight: 600;">1e</td>
+                    <td>Leveringen/diensten belast met 0% of niet bij u belast</td>
+                    <td class="mono text-right">${formatEuro(dispBase0, useBdRounding)}</td>
+                    <td class="mono text-right" style="color: var(--text-muted);">—</td>
+                </tr>
+
+                <tr class="vat-section-row"><td colspan="4">Rubriek 5: Voorbelasting en totaal</td></tr>
+                <tr>
+                    <td class="mono" style="font-weight: 600;">5a</td>
+                    <td>Verschuldigde omzetbelasting (subtotaal rubrieken 1a en 1b)</td>
+                    <td class="mono text-right" style="color: var(--text-muted);">—</td>
+                    <td class="mono text-right" style="font-weight: 600;">${formatEuro(total5a, useBdRounding)}</td>
+                </tr>
+                <tr>
+                    <td class="mono" style="font-weight: 600;">5b</td>
+                    <td>Voorbelasting (BTW op zakelijke kosten en investeringen)</td>
+                    <td class="mono text-right" style="color: var(--text-muted);">—</td>
+                    <td class="mono text-right" style="font-weight: 600;">${formatEuro(disp5b, useBdRounding)}</td>
+                </tr>
+                <tr class="vat-total-row">
+                    <td class="mono">5g</td>
+                    <td>${total5g >= 0 ? 'Totaal te betalen aan de Belastingdienst' : 'Totaal terug te vragen van de Belastingdienst'}</td>
+                    <td class="mono text-right"></td>
+                    <td class="mono text-right" style="font-size: 15px;">${formatEuro(Math.abs(total5g), useBdRounding)}</td>
+                </tr>
+            `;
+
+            // Tekst klaarzetten voor kopieerknop
+            state.lastVatReportText = [
+                `BTW-Aangifte Cijferwerk — ${quarterNames[quarter]}`,
+                `1a Hoog tarief (21%): Grondslag ${formatEuro(dispBase21, useBdRounding)} | BTW ${formatEuro(dispVat21, useBdRounding)}`,
+                `1b Laag tarief (9%): Grondslag ${formatEuro(dispBase9, useBdRounding)} | BTW ${formatEuro(dispVat9, useBdRounding)}`,
+                `1e Overig (0%): Grondslag ${formatEuro(dispBase0, useBdRounding)}`,
+                `5a Verschuldigde BTW: ${formatEuro(total5a, useBdRounding)}`,
+                `5b Voorbelasting: ${formatEuro(disp5b, useBdRounding)}`,
+                `5g ${total5g >= 0 ? 'Te betalen' : 'Terug te vragen'}: ${formatEuro(Math.abs(total5g), useBdRounding)}`
+            ].join('\n');
+        }
+
+        document.getElementById('vatQuarterSelect').addEventListener('change', renderVatReturn);
+        document.getElementById('vatRoundBelastingdienst').addEventListener('change', renderVatReturn);
+        document.getElementById('copyVatBtn').addEventListener('click', () => {
+            navigator.clipboard.writeText(state.lastVatReportText).then(() => {
+                showToast('BTW-aangifte overzicht gekopieerd naar klembord.');
+            });
+        });
+
         /* === SLIMME SNEL-INVOER (NATURAL LANGUAGE PARSER) === */
         function parseNaturalLanguageInput(rawText) {
             const text = rawText.trim();
@@ -1217,7 +1446,6 @@
             const lower = text.toLowerCase();
             let remaining = text;
 
-            // 1. Datum herkennen (dd-mm-yyyy of dd-mm)
             let parsedDate = new Date().toISOString().split('T')[0];
             const dateMatch = remaining.match(/\b(\d{1,2})[-/](\d{1,2})(?:[-/](\d{2,4}))?\b/);
             if (dateMatch) {
@@ -1229,7 +1457,6 @@
                 remaining = remaining.replace(dateMatch[0], ' ');
             }
 
-            // 2. BTW-percentage herkennen (21%, 9%, 0%)
             let vatRate = 21;
             const vatMatch = remaining.match(/\b(21|9|0)\s*%/);
             if (vatMatch) {
@@ -1237,7 +1464,6 @@
                 remaining = remaining.replace(vatMatch[0], ' ');
             }
 
-            // 3. Bedrag herkennen (bijv. 54,45 of 1210.00 of € 50)
             let grossAmount = 0;
             const amountMatch = remaining.match(/(?:€\s*)?(\d+(?:[.,]\d{1,2})?)/);
             if (amountMatch) {
@@ -1250,9 +1476,8 @@
                 return null;
             }
 
-            // 4. Verkoop vs Inkoop detectie & Grootboek-koppeling
             const isIncome = /\b(factuur|verkoop|omzet|klant|declaratie|opbrengst)\b/i.test(lower);
-            let targetAccount = isIncome ? '8000' : '4300';
+            let targetAccount = isIncome ? (vatRate === 9 ? '8200' : vatRate === 0 ? '8300' : '8000') : '4300';
 
             const keywordMap = [
                 { regex: /\b(telefoon|internet|kpn|vodafone|ziggo|hosting|domein)\b/i, code: '4400' },
@@ -1262,30 +1487,28 @@
                 { regex: /\b(marketing|reclame|advertentie|google ads|linkedin)\b/i, code: '4700' },
                 { regex: /\b(bank|verzekering|rente)\b/i, code: '4800' },
                 { regex: /\b(accountant|boekhouder|advocaat|notaris)\b/i, code: '4900' },
-                { regex: /\b(laptop|telefoon toestel|bureau|stoel|monitor|inventaris)\b/i, code: '0100' },
-                { regex: /\b(omzet|consultancy|advies|uren)\b/i, code: '8000' }
+                { regex: /\b(laptop|telefoon toestel|bureau|stoel|monitor|inventaris)\b/i, code: '0100' }
             ];
 
-            for (const item of keywordMap) {
-                if (item.regex.test(lower)) {
-                    targetAccount = item.code;
-                    break;
+            if (!isIncome) {
+                for (const item of keywordMap) {
+                    if (item.regex.test(lower)) {
+                        targetAccount = item.code;
+                        break;
+                    }
                 }
             }
 
-            // Opschonen omschrijving
             const cleanDesc = remaining
                 .replace(/\b(factuur|inkoop|verkoop|kantoor|telefoon|reis|omzet)\b/gi, '')
                 .replace(/\s+/g, ' ')
                 .trim() || (isIncome ? 'Verkoopfactuur' : 'Inkoopfactuur');
 
-            // Bereken netto en btw (uitgaande van bedrag incl. btw)
             const netAmount = roundCents(grossAmount / (1 + vatRate / 100));
             const vatAmount = roundCents(grossAmount - netAmount);
 
             const lines = [];
             if (isIncome) {
-                // Verkoopboeking: Debiteuren (1300) Debet, Omzet (8xxx) Credit, Af te dragen BTW (1510/1520) Credit
                 lines.push({ accountCode: '1300', memo: cleanDesc, debit: grossAmount, credit: 0 });
                 lines.push({ accountCode: targetAccount, memo: cleanDesc, debit: 0, credit: netAmount });
                 if (vatAmount > 0) {
@@ -1293,7 +1516,6 @@
                     lines.push({ accountCode: vatAcc, memo: `BTW ${vatRate}%`, debit: 0, credit: vatAmount });
                 }
             } else {
-                // Inkoopboeking: Kosten/Activa Debet, Voorbelasting (1530) Debet, Crediteuren/Bank Credit
                 lines.push({ accountCode: targetAccount, memo: cleanDesc, debit: netAmount, credit: 0 });
                 if (vatAmount > 0) {
                     lines.push({ accountCode: '1530', memo: `Voorbelasting ${vatRate}%`, debit: vatAmount, credit: 0 });
@@ -1339,7 +1561,6 @@
                 </div>
             `).join('');
 
-            // Selecteer juiste grootboekrekening per rij
             container.querySelectorAll('.line-acc').forEach(sel => {
                 const idx = parseInt(sel.dataset.idx, 10);
                 sel.value = state.draftLines[idx].accountCode;
@@ -1422,7 +1643,6 @@
             }
         }
 
-        // Event handlers voor Journaal & NLP
         function triggerNlpParse() {
             const inp = document.getElementById('nlpInput');
             const parsed = parseNaturalLanguageInput(inp.value);
@@ -1491,7 +1711,7 @@
                 document.getElementById('nlpInput').value = '';
                 resetJournalForm();
                 await refreshAllData();
-                showToast('Journaalpost opgeslagen en saldi bijgewerkt.');
+                showToast('Journaalpost opgeslagen en BTW-overzicht bijgewerkt.');
             } catch (err) {
                 showToast(err.message);
             }
@@ -1508,7 +1728,7 @@
             document.getElementById('entryCountLabel').textContent = state.entries.length;
 
             if (state.entries.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--text-muted); padding: 24px;">Nog geen boekingen opgeslagen. Gebruik de slimme invoerbalk hierboven om te starten.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--text-muted); padding: 24px;">Nog geen boekingen opgeslagen.</td></tr>`;
                 return;
             }
 
@@ -1566,7 +1786,6 @@
                 const badgeClass = `badge-${acc.category.toLowerCase()}`;
                 const vatLabel = acc.defaultVat === 'N/A' ? '—' : `${acc.defaultVat}%`;
                 const rawBal = state.accountBalances[acc.code] || 0;
-                // Voor Passiva en Opbrengsten tonen we een creditsaldo positief
                 const displayBal = (acc.category === 'Passiva' || acc.category === 'Opbrengsten') ? -rawBal : rawBal;
                 const balColor = displayBal === 0 ? 'var(--text-muted)' : 'var(--text-main)';
 
@@ -1589,13 +1808,12 @@
             state.accounts.forEach(acc => {
                 const rawBal = state.accountBalances[acc.code] || 0;
                 if (acc.category === 'Opbrengsten') {
-                    revenue = roundCents(revenue - rawBal); // Credit is omzet
+                    revenue = roundCents(revenue - rawBal);
                 } else if (acc.category === 'Kosten') {
-                    expenses = roundCents(expenses + rawBal); // Debet is kosten
+                    expenses = roundCents(expenses + rawBal);
                 }
             });
 
-            // BTW-rekeningen: 1510 + 1520 (credit = af te dragen) minus 1530 (debet = voorbelasting)
             const vatPayable = roundCents(-(state.accountBalances['1510'] || 0) - (state.accountBalances['1520'] || 0));
             const vatReceivable = roundCents(state.accountBalances['1530'] || 0);
             const vatNet = roundCents(vatPayable - vatReceivable);
@@ -1609,11 +1827,10 @@
             profitEl.textContent = formatEuro(netProfit);
             profitEl.style.color = netProfit >= 0 ? 'var(--success)' : 'var(--danger)';
 
-            // Recente boekingen op dashboard
             const dashBody = document.getElementById('dashboardRecentBody');
             const recent = state.entries.slice(0, 5);
             if (recent.length === 0) {
-                dashBody.innerHTML = `<tr><td colspan="4" style="text-align: center; color: var(--text-muted); padding: 24px;">Nog geen boekingen vastgelegd. Klik rechtsboven op <strong>+ Nieuwe boeking</strong> om te beginnen.</td></tr>`;
+                dashBody.innerHTML = `<tr><td colspan="4" style="text-align: center; color: var(--text-muted); padding: 24px;">Nog geen boekingen vastgelegd.</td></tr>`;
             } else {
                 dashBody.innerHTML = recent.map(e => {
                     const total = e.lines.reduce((s, l) => s + l.debit, 0);
@@ -1629,7 +1846,6 @@
             }
         }
 
-        // Nieuw grootboekrekening formulier
         document.getElementById('newAccountForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const code = document.getElementById('accCode').value.trim();
@@ -1673,6 +1889,7 @@
             { id: 'nav-btw', label: 'Ga naar BTW-Aangifte', category: 'Navigatie', action: () => switchView('btw') },
             { id: 'nav-grootboek', label: 'Ga naar Grootboekschema', category: 'Navigatie', action: () => switchView('grootboek') },
             { id: 'nav-backup', label: 'Ga naar Archief & Back-up', category: 'Navigatie', action: () => switchView('backup') },
+            { id: 'act-copy-vat', label: 'Kopieer BTW-aangifte naar klembord', category: 'Actie', action: () => { switchView('btw'); document.getElementById('copyVatBtn').click(); } },
             { id: 'act-new-acc', label: 'Nieuwe grootboekrekening aanmaken', category: 'Actie', action: () => { switchView('grootboek'); document.getElementById('accCode').focus(); } },
             { id: 'act-theme', label: 'Wissel tussen Licht en Donker thema', category: 'Weergave', action: () => toggleTheme() }
         ];

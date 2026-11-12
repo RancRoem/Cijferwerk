@@ -241,8 +241,13 @@
             font-family: var(--font-sans);
         }
 
-        .btn:hover {
+        .btn:hover:not(:disabled) {
             background-color: var(--bg-app);
+        }
+
+        .btn:disabled {
+            opacity: 0.45;
+            cursor: not-allowed;
         }
 
         .btn-primary {
@@ -251,8 +256,20 @@
             color: #ffffff;
         }
 
-        .btn-primary:hover {
+        .btn-primary:hover:not(:disabled) {
             background-color: var(--accent-hover);
+        }
+
+        .btn-danger-ghost {
+            border: none;
+            background: transparent;
+            color: var(--text-muted);
+            padding: 4px 8px;
+        }
+
+        .btn-danger-ghost:hover {
+            background: var(--danger-soft);
+            color: var(--danger);
         }
 
         .workspace {
@@ -342,6 +359,7 @@
             font-family: var(--font-sans);
             outline: none;
             transition: border-color 0.15s;
+            width: 100%;
         }
 
         .input:focus, .select:focus {
@@ -359,9 +377,115 @@
             align-items: end;
         }
 
+        /* Slimme Snel-invoer Balk */
+        .nlp-box {
+            padding: 18px 20px;
+            background: linear-gradient(to right, var(--accent-soft), transparent);
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .nlp-input-row {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .nlp-input {
+            font-size: 15px;
+            padding: 10px 14px;
+            background-color: var(--bg-surface);
+            border: 1.5px solid var(--accent);
+            font-weight: 500;
+        }
+
+        .nlp-hints {
+            margin-top: 8px;
+            font-size: 12px;
+            color: var(--text-muted);
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .nlp-chip {
+            background-color: var(--bg-surface);
+            border: 1px solid var(--border-color);
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-family: var(--font-mono);
+            font-size: 11px;
+            cursor: pointer;
+            color: var(--text-main);
+        }
+
+        .nlp-chip:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+
+        /* Journaal Boekingsregels */
+        .entry-meta-grid {
+            display: grid;
+            grid-template-columns: 150px 1fr 180px;
+            gap: 12px;
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--border-color);
+            background-color: var(--bg-subtle);
+        }
+
+        .journal-lines-wrap {
+            padding: 16px 20px;
+        }
+
+        .journal-line-row {
+            display: grid;
+            grid-template-columns: 2fr 1.5fr 130px 130px 36px;
+            gap: 10px;
+            margin-bottom: 8px;
+            align-items: center;
+        }
+
+        .journal-footer {
+            padding: 14px 20px;
+            background-color: var(--bg-subtle);
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .balance-indicator {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            font-family: var(--font-mono);
+            font-size: 13px;
+        }
+
+        .balance-badge {
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 12px;
+            font-family: var(--font-sans);
+        }
+
+        .balance-ok {
+            background-color: var(--success-soft);
+            color: var(--success);
+        }
+
+        .balance-err {
+            background-color: var(--danger-soft);
+            color: var(--danger);
+        }
+
         @media (max-width: 900px) {
-            .form-grid {
-                grid-template-columns: 1fr 1fr;
+            .form-grid, .entry-meta-grid, .journal-line-row {
+                grid-template-columns: 1fr;
             }
         }
 
@@ -416,6 +540,10 @@
 
         .mono {
             font-family: var(--font-mono);
+        }
+
+        .text-right {
+            text-align: right;
         }
 
         .badge {
@@ -636,32 +764,139 @@
                     <div class="grid-cards">
                         <div class="card">
                             <div class="card-label">Netto Omzet (Excl. BTW)</div>
-                            <div class="card-value">€ 0,00</div>
+                            <div class="card-value" id="kpiRevenue">€ 0,00</div>
                         </div>
                         <div class="card">
                             <div class="card-label">Kosten (Excl. BTW)</div>
-                            <div class="card-value">€ 0,00</div>
+                            <div class="card-value" id="kpiExpenses">€ 0,00</div>
                         </div>
                         <div class="card">
-                            <div class="card-label">Te betalen BTW (Kwartaal)</div>
-                            <div class="card-value">€ 0,00</div>
+                            <div class="card-label">BTW Saldo (Af te dragen - Voorbelasting)</div>
+                            <div class="card-value" id="kpiVatBalance">€ 0,00</div>
                         </div>
                         <div class="card">
-                            <div class="card-label">Vrij besteedbaar resultaat</div>
-                            <div class="card-value" style="color: var(--success);">€ 0,00</div>
+                            <div class="card-label">Netto Resultaat (Winst / Verlies)</div>
+                            <div class="card-value" id="kpiNetProfit" style="color: var(--success);">€ 0,00</div>
                         </div>
                     </div>
-                    <div class="empty-state">
-                        <h3>Stap 2 voltooid: Lokale database & Grootboekschema actief</h3>
-                        <p>Klik in het menu op <strong>Grootboekschema</strong> (of druk op <span class="kbd-badge">G</span> gevolgd door <span class="kbd-badge">G</span>) om het Nederlandse rekeningschema te bekijken en uit te breiden.</p>
+
+                    <div class="panel">
+                        <div class="panel-header">
+                            <div class="panel-title">Recente Journaalposten</div>
+                            <button class="btn" onclick="switchView('journaal')">Naar Journaal & Snelboeken →</button>
+                        </div>
+                        <div class="table-wrap">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th style="width: 110px;">Datum</th>
+                                        <th>Omschrijving & Relatie</th>
+                                        <th style="width: 120px;">Dagboek</th>
+                                        <th style="width: 140px; text-align: right;">Totaalbedrag</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="dashboardRecentBody">
+                                    <tr><td colspan="4" style="text-align: center; color: var(--text-muted); padding: 24px;">Nog geen boekingen vastgelegd.</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </section>
 
-                <!-- VIEW: JOURNAAL -->
+                <!-- VIEW: JOURNAAL & SNELBOEKEN -->
                 <section id="view-journaal" class="view-section">
-                    <div class="empty-state">
-                        <h3>Journaal & Snel-invoer</h3>
-                        <p>In Stap 3 bouwen we hier het dubbel boekhouden met slimme snel-invoer (bijv. <em>"12-11 KPN 54,45 21% kantoor"</em>).</p>
+                    <div class="panel">
+                        <div class="panel-header">
+                            <div>
+                                <div class="panel-title">Slimme Snel-invoer & Dubbel Boekhouden</div>
+                                <div style="font-size: 12px; color: var(--text-muted);">Typ een vrije regel om automatisch debet/credit-regels te genereren, of boek handmatig.</div>
+                            </div>
+                        </div>
+
+                        <!-- Natural Language Input -->
+                        <div class="nlp-box">
+                            <div class="nlp-input-row">
+                                <input type="text" class="input nlp-input" id="nlpInput" placeholder="Bijv: 12-11 KPN Zakelijk 54,45 21% telefoon — druk op Enter">
+                                <button type="button" class="btn btn-primary" id="nlpParseBtn">Verwerk regel</button>
+                            </div>
+                            <div class="nlp-hints">
+                                <span>Voorbeelden (klik om te testen):</span>
+                                <span class="nlp-chip" data-example="12-11 KPN Zakelijk 54,45 21% telefoon">12-11 KPN Zakelijk 54,45 21% telefoon</span>
+                                <span class="nlp-chip" data-example="factuur Studio Noord 1452,00 21% omzet">factuur Studio Noord 1452,00 21% omzet</span>
+                                <span class="nlp-chip" data-example="10-11 NS Reizen 28,50 9% reis">10-11 NS Reizen 28,50 9% reis</span>
+                            </div>
+                        </div>
+
+                        <!-- Boekingskop -->
+                        <div class="entry-meta-grid">
+                            <div class="field-group">
+                                <label class="field-label" for="entryDate">Boekdatum</label>
+                                <input type="date" class="input mono" id="entryDate">
+                            </div>
+                            <div class="field-group">
+                                <label class="field-label" for="entryDesc">Omschrijving / Relatie</label>
+                                <input type="text" class="input" id="entryDesc" placeholder="Bijv. Factuur #2026-014 — Klant B.V.">
+                            </div>
+                            <div class="field-group">
+                                <label class="field-label" for="entryJournalType">Dagboek</label>
+                                <select class="select" id="entryJournalType">
+                                    <option value="Inkoop">Inkoopboek</option>
+                                    <option value="Verkoop">Verkoopboek</option>
+                                    <option value="Bank">Bankboek</option>
+                                    <option value="Memoriaal">Memoriaal</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Journaalregels (Debet / Credit) -->
+                        <div class="journal-lines-wrap">
+                            <div style="display: grid; grid-template-columns: 2fr 1.5fr 130px 130px 36px; gap: 10px; margin-bottom: 6px;">
+                                <span class="field-label">Grootboekrekening</span>
+                                <span class="field-label">Regelomschrijving</span>
+                                <span class="field-label text-right">Debet (€)</span>
+                                <span class="field-label text-right">Credit (€)</span>
+                                <span></span>
+                            </div>
+                            <div id="journalLinesContainer"></div>
+                            <div style="margin-top: 10px; display: flex; gap: 8px;">
+                                <button type="button" class="btn" id="addLineBtn">+ Regel toevoegen</button>
+                                <button type="button" class="btn" id="resetEntryBtn">Formulier legen</button>
+                            </div>
+                        </div>
+
+                        <!-- Live Balanscontrole -->
+                        <div class="journal-footer">
+                            <div class="balance-indicator">
+                                <span>Debet: <strong id="totalDebitDisplay">€ 0,00</strong></span>
+                                <span>Credit: <strong id="totalCreditDisplay">€ 0,00</strong></span>
+                                <span class="balance-badge balance-err" id="balanceStatusBadge">Voer bedragen in</span>
+                            </div>
+                            <button type="button" class="btn btn-primary" id="saveEntryBtn" disabled>Boeking opslaan</button>
+                        </div>
+                    </div>
+
+                    <!-- Lijst met opgeslagen boekingen -->
+                    <div class="panel">
+                        <div class="panel-header">
+                            <div class="panel-title">Journaalregister (<span id="entryCountLabel">0</span> boekingen)</div>
+                        </div>
+                        <div class="table-wrap">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th style="width: 70px;">Nr.</th>
+                                        <th style="width: 110px;">Datum</th>
+                                        <th style="width: 100px;">Dagboek</th>
+                                        <th>Omschrijving & Journaalregels</th>
+                                        <th style="width: 130px; text-align: right;">Debet / Credit</th>
+                                        <th style="width: 60px;"></th>
+                                    </tr>
+                                </thead>
+                                <tbody id="entriesTableBody">
+                                    <tr><td colspan="6" style="text-align: center; color: var(--text-muted); padding: 24px;">Nog geen boekingen opgeslagen.</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </section>
 
@@ -669,7 +904,7 @@
                 <section id="view-relaties" class="view-section">
                     <div class="empty-state">
                         <h3>Debiteuren & Crediteuren</h3>
-                        <p>Hier verschijnt straks het overzicht van openstaande facturen, vervaldatums en herinneringsteksten.</p>
+                        <p>Hier verschijnt in Stap 5 het overzicht van openstaande facturen, vervaldatums en herinneringsteksten.</p>
                     </div>
                 </section>
 
@@ -677,7 +912,7 @@
                 <section id="view-btw" class="view-section">
                     <div class="empty-state">
                         <h3>BTW-Aangifte (Nederlands Model)</h3>
-                        <p>Realtime berekening van rubrieken 1a, 1b, 5a en 5b op basis van jouw boekingen.</p>
+                        <p>In Stap 4 bouwen we hier de realtime berekening van rubrieken 1a, 1b, 5a en 5b op basis van jouw journaalposten.</p>
                     </div>
                 </section>
 
@@ -691,7 +926,7 @@
                             </div>
                             <div class="toolbar-row">
                                 <input type="text" class="input" id="accountSearch" placeholder="Zoek op nummer of naam..." style="width: 220px;">
-                                <select class="select" id="accountCategoryFilter">
+                                <select class="select" id="accountCategoryFilter" style="width: 190px;">
                                     <option value="ALL">Alle categorieën</option>
                                     <option value="Activa">Activa (Bezittingen)</option>
                                     <option value="Passiva">Passiva (Schulden & EV)</option>
@@ -701,7 +936,6 @@
                             </div>
                         </div>
 
-                        <!-- Nieuw grootboekrekening formulier -->
                         <form class="form-grid" id="newAccountForm">
                             <div class="field-group">
                                 <label class="field-label" for="accCode">Nummer</label>
@@ -740,7 +974,7 @@
                                         <th>Omschrijving</th>
                                         <th style="width: 150px;">Categorie</th>
                                         <th style="width: 130px;">Standaard BTW</th>
-                                        <th style="width: 140px; text-align: right;">Saldo</th>
+                                        <th style="width: 140px; text-align: right;">Actueel Saldo</th>
                                     </tr>
                                 </thead>
                                 <tbody id="accountsTableBody">
@@ -755,7 +989,7 @@
                 <section id="view-backup" class="view-section">
                     <div class="empty-state">
                         <h3>Archief & Auditfile Back-up</h3>
-                        <p>Exporteer en importeer hier je volledige administratie inclusief gekoppelde bonnen.</p>
+                        <p>Exporteer en importeer hier straks je volledige administratie inclusief gekoppelde bonnen.</p>
                     </div>
                 </section>
             </main>
@@ -782,7 +1016,7 @@
     </div>
 
     <script>
-        /* === STAP 2: INDEXEDDB DATABASE & NEDERLANDS GROOTBOEKSCHEMA === */
+        /* === STAP 3: DUBBEL BOEKHOUDEN, SLIMME SNEL-INVOER & BALANSBEREKENING === */
         const DB_NAME = 'CijferwerkDB';
         const DB_VERSION = 1;
 
@@ -821,12 +1055,24 @@
             db: null,
             accounts: [],
             entries: [],
+            accountBalances: {},
+            draftLines: [],
             currentView: 'dashboard',
             selectedCmdIndex: 0,
             lastKeyG: false
         };
 
-        // IndexedDB Wrapper
+        // Euro-formattering
+        function formatEuro(amount) {
+            const val = Math.abs(amount) < 0.005 ? 0 : amount;
+            return new Intl.NumberFormat('nl-NL', { style: 'currency', currency: 'EUR' }).format(val);
+        }
+
+        function roundCents(num) {
+            return Math.round((Number(num) + Number.EPSILON) * 100) / 100;
+        }
+
+        // IndexedDB Setup
         function initDatabase() {
             return new Promise((resolve, reject) => {
                 const request = indexedDB.open(DB_NAME, DB_VERSION);
@@ -848,7 +1094,7 @@
                 request.onsuccess = async (e) => {
                     state.db = e.target.result;
                     await seedDefaultAccountsIfEmpty();
-                    await loadAccountsFromDB();
+                    await refreshAllData();
                     updateDbStatus(true);
                     resolve();
                 };
@@ -876,15 +1122,33 @@
             });
         }
 
+        async function refreshAllData() {
+            await loadAccountsFromDB();
+            await loadEntriesFromDB();
+            recalculateBalances();
+            renderAccountsTable();
+            renderEntriesTable();
+            renderDashboard();
+            updateDbStatus(true);
+        }
+
         function loadAccountsFromDB() {
             return new Promise((resolve) => {
                 const tx = state.db.transaction('accounts', 'readonly');
-                const store = tx.objectStore('accounts');
-                const req = store.getAll();
-
+                const req = tx.objectStore('accounts').getAll();
                 req.onsuccess = () => {
                     state.accounts = req.result.sort((a, b) => a.code.localeCompare(b.code));
-                    renderAccountsTable();
+                    resolve();
+                };
+            });
+        }
+
+        function loadEntriesFromDB() {
+            return new Promise((resolve) => {
+                const tx = state.db.transaction('entries', 'readonly');
+                const req = tx.objectStore('entries').getAll();
+                req.onsuccess = () => {
+                    state.entries = req.result.sort((a, b) => b.date.localeCompare(a.date) || b.id - a.id);
                     resolve();
                 };
             });
@@ -893,12 +1157,44 @@
         function addAccountToDB(account) {
             return new Promise((resolve, reject) => {
                 const tx = state.db.transaction('accounts', 'readwrite');
-                const store = tx.objectStore('accounts');
-                const req = store.add(account);
-
+                const req = tx.objectStore('accounts').add(account);
                 req.onsuccess = () => resolve();
                 req.onerror = () => reject(new Error('Rekeningnummer bestaat al.'));
             });
+        }
+
+        function saveEntryToDB(entry) {
+            return new Promise((resolve, reject) => {
+                const tx = state.db.transaction('entries', 'readwrite');
+                const req = tx.objectStore('entries').add(entry);
+                req.onsuccess = () => resolve(req.result);
+                req.onerror = () => reject(new Error('Fout bij opslaan van boeking.'));
+            });
+        }
+
+        function deleteEntryFromDB(id) {
+            return new Promise((resolve, reject) => {
+                const tx = state.db.transaction('entries', 'readwrite');
+                const req = tx.objectStore('entries').delete(id);
+                req.onsuccess = () => resolve();
+                req.onerror = () => reject(new Error('Fout bij verwijderen.'));
+            });
+        }
+
+        // Bereken actuele grootboeksaldi & kerncijfers
+        function recalculateBalances() {
+            const balances = {};
+            state.accounts.forEach(a => { balances[a.code] = 0; });
+
+            state.entries.forEach(entry => {
+                entry.lines.forEach(line => {
+                    if (balances[line.accountCode] === undefined) balances[line.accountCode] = 0;
+                    // Debet is +, Credit is -
+                    balances[line.accountCode] = roundCents(balances[line.accountCode] + (line.debit - line.credit));
+                });
+            });
+
+            state.accountBalances = balances;
         }
 
         function updateDbStatus(isConnected) {
@@ -906,14 +1202,348 @@
             const text = document.getElementById('dbStatusText');
             if (isConnected) {
                 dot.classList.add('online');
-                text.textContent = `CijferwerkDB verbonden (${state.accounts.length} grootboekrekeningen)`;
+                text.textContent = `CijferwerkDB verbonden — ${state.entries.length} boekingen, ${state.accounts.length} grootboekrekeningen`;
             } else {
                 dot.classList.remove('online');
-                text.textContent = 'Database fout (controleer browserinstellingen)';
+                text.textContent = 'Database fout';
             }
         }
 
-        // Grootboek tabel renderen
+        /* === SLIMME SNEL-INVOER (NATURAL LANGUAGE PARSER) === */
+        function parseNaturalLanguageInput(rawText) {
+            const text = rawText.trim();
+            if (!text) return null;
+
+            const lower = text.toLowerCase();
+            let remaining = text;
+
+            // 1. Datum herkennen (dd-mm-yyyy of dd-mm)
+            let parsedDate = new Date().toISOString().split('T')[0];
+            const dateMatch = remaining.match(/\b(\d{1,2})[-/](\d{1,2})(?:[-/](\d{2,4}))?\b/);
+            if (dateMatch) {
+                const day = dateMatch[1].padStart(2, '0');
+                const month = dateMatch[2].padStart(2, '0');
+                let year = dateMatch[3] || '2026';
+                if (year.length === 2) year = '20' + year;
+                parsedDate = `${year}-${month}-${day}`;
+                remaining = remaining.replace(dateMatch[0], ' ');
+            }
+
+            // 2. BTW-percentage herkennen (21%, 9%, 0%)
+            let vatRate = 21;
+            const vatMatch = remaining.match(/\b(21|9|0)\s*%/);
+            if (vatMatch) {
+                vatRate = parseInt(vatMatch[1], 10);
+                remaining = remaining.replace(vatMatch[0], ' ');
+            }
+
+            // 3. Bedrag herkennen (bijv. 54,45 of 1210.00 of € 50)
+            let grossAmount = 0;
+            const amountMatch = remaining.match(/(?:€\s*)?(\d+(?:[.,]\d{1,2})?)/);
+            if (amountMatch) {
+                grossAmount = parseFloat(amountMatch[1].replace(',', '.'));
+                remaining = remaining.replace(amountMatch[0], ' ');
+            }
+
+            if (grossAmount <= 0) {
+                showToast('Geen geldig bedrag herkend in de regel.');
+                return null;
+            }
+
+            // 4. Verkoop vs Inkoop detectie & Grootboek-koppeling
+            const isIncome = /\b(factuur|verkoop|omzet|klant|declaratie|opbrengst)\b/i.test(lower);
+            let targetAccount = isIncome ? '8000' : '4300';
+
+            const keywordMap = [
+                { regex: /\b(telefoon|internet|kpn|vodafone|ziggo|hosting|domein)\b/i, code: '4400' },
+                { regex: /\b(software|licentie|adobe|microsoft|cloud|saas|github)\b/i, code: '4500' },
+                { regex: /\b(reis|ns|trein|ov|taxi|hotel|parkeren|brandstof|benzine)\b/i, code: '4600' },
+                { regex: /\b(huur|kantoorruimte|energie|stroom|water)\b/i, code: '4100' },
+                { regex: /\b(marketing|reclame|advertentie|google ads|linkedin)\b/i, code: '4700' },
+                { regex: /\b(bank|verzekering|rente)\b/i, code: '4800' },
+                { regex: /\b(accountant|boekhouder|advocaat|notaris)\b/i, code: '4900' },
+                { regex: /\b(laptop|telefoon toestel|bureau|stoel|monitor|inventaris)\b/i, code: '0100' },
+                { regex: /\b(omzet|consultancy|advies|uren)\b/i, code: '8000' }
+            ];
+
+            for (const item of keywordMap) {
+                if (item.regex.test(lower)) {
+                    targetAccount = item.code;
+                    break;
+                }
+            }
+
+            // Opschonen omschrijving
+            const cleanDesc = remaining
+                .replace(/\b(factuur|inkoop|verkoop|kantoor|telefoon|reis|omzet)\b/gi, '')
+                .replace(/\s+/g, ' ')
+                .trim() || (isIncome ? 'Verkoopfactuur' : 'Inkoopfactuur');
+
+            // Bereken netto en btw (uitgaande van bedrag incl. btw)
+            const netAmount = roundCents(grossAmount / (1 + vatRate / 100));
+            const vatAmount = roundCents(grossAmount - netAmount);
+
+            const lines = [];
+            if (isIncome) {
+                // Verkoopboeking: Debiteuren (1300) Debet, Omzet (8xxx) Credit, Af te dragen BTW (1510/1520) Credit
+                lines.push({ accountCode: '1300', memo: cleanDesc, debit: grossAmount, credit: 0 });
+                lines.push({ accountCode: targetAccount, memo: cleanDesc, debit: 0, credit: netAmount });
+                if (vatAmount > 0) {
+                    const vatAcc = vatRate === 9 ? '1520' : '1510';
+                    lines.push({ accountCode: vatAcc, memo: `BTW ${vatRate}%`, debit: 0, credit: vatAmount });
+                }
+            } else {
+                // Inkoopboeking: Kosten/Activa Debet, Voorbelasting (1530) Debet, Crediteuren/Bank Credit
+                lines.push({ accountCode: targetAccount, memo: cleanDesc, debit: netAmount, credit: 0 });
+                if (vatAmount > 0) {
+                    lines.push({ accountCode: '1530', memo: `Voorbelasting ${vatRate}%`, debit: vatAmount, credit: 0 });
+                }
+                lines.push({ accountCode: '1600', memo: cleanDesc, debit: 0, credit: grossAmount });
+            }
+
+            return {
+                date: parsedDate,
+                description: cleanDesc,
+                journalType: isIncome ? 'Verkoop' : 'Inkoop',
+                lines
+            };
+        }
+
+        /* === JOURNAALFORMULIER LOGICA === */
+        function resetJournalForm() {
+            document.getElementById('entryDate').value = new Date().toISOString().split('T')[0];
+            document.getElementById('entryDesc').value = '';
+            document.getElementById('entryJournalType').value = 'Inkoop';
+            state.draftLines = [
+                { accountCode: '4300', memo: '', debit: 0, credit: 0 },
+                { accountCode: '1600', memo: '', debit: 0, credit: 0 }
+            ];
+            renderJournalLines();
+        }
+
+        function renderJournalLines() {
+            const container = document.getElementById('journalLinesContainer');
+            const optionsHtml = state.accounts.map(acc =>
+                `<option value="${acc.code}">${acc.code} — ${escapeHtml(acc.name)}</option>`
+            ).join('');
+
+            container.innerHTML = state.draftLines.map((line, idx) => `
+                <div class="journal-line-row" data-idx="${idx}">
+                    <select class="select line-acc" data-idx="${idx}">
+                        ${optionsHtml}
+                    </select>
+                    <input type="text" class="input line-memo" data-idx="${idx}" value="${escapeHtml(line.memo)}" placeholder="Toelichting...">
+                    <input type="number" step="0.01" min="0" class="input mono text-right line-debit" data-idx="${idx}" value="${line.debit || ''}" placeholder="0.00">
+                    <input type="number" step="0.01" min="0" class="input mono text-right line-credit" data-idx="${idx}" value="${line.credit || ''}" placeholder="0.00">
+                    <button type="button" class="btn btn-danger-ghost line-remove" data-idx="${idx}" title="Regel verwijderen">✕</button>
+                </div>
+            `).join('');
+
+            // Selecteer juiste grootboekrekening per rij
+            container.querySelectorAll('.line-acc').forEach(sel => {
+                const idx = parseInt(sel.dataset.idx, 10);
+                sel.value = state.draftLines[idx].accountCode;
+                sel.addEventListener('change', (e) => {
+                    state.draftLines[idx].accountCode = e.target.value;
+                });
+            });
+
+            container.querySelectorAll('.line-memo').forEach(inp => {
+                const idx = parseInt(inp.dataset.idx, 10);
+                inp.addEventListener('input', (e) => {
+                    state.draftLines[idx].memo = e.target.value;
+                });
+            });
+
+            container.querySelectorAll('.line-debit').forEach(inp => {
+                const idx = parseInt(inp.dataset.idx, 10);
+                inp.addEventListener('input', (e) => {
+                    const val = roundCents(parseFloat(e.target.value) || 0);
+                    state.draftLines[idx].debit = val;
+                    if (val > 0) {
+                        state.draftLines[idx].credit = 0;
+                        container.querySelector(`.line-credit[data-idx="${idx}"]`).value = '';
+                    }
+                    updateBalanceCheck();
+                });
+            });
+
+            container.querySelectorAll('.line-credit').forEach(inp => {
+                const idx = parseInt(inp.dataset.idx, 10);
+                inp.addEventListener('input', (e) => {
+                    const val = roundCents(parseFloat(e.target.value) || 0);
+                    state.draftLines[idx].credit = val;
+                    if (val > 0) {
+                        state.draftLines[idx].debit = 0;
+                        container.querySelector(`.line-debit[data-idx="${idx}"]`).value = '';
+                    }
+                    updateBalanceCheck();
+                });
+            });
+
+            container.querySelectorAll('.line-remove').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    if (state.draftLines.length <= 2) {
+                        showToast('Een journaalpost heeft minimaal 2 regels nodig.');
+                        return;
+                    }
+                    const idx = parseInt(e.target.dataset.idx, 10);
+                    state.draftLines.splice(idx, 1);
+                    renderJournalLines();
+                });
+            });
+
+            updateBalanceCheck();
+        }
+
+        function updateBalanceCheck() {
+            const totalDebit = roundCents(state.draftLines.reduce((sum, l) => sum + (l.debit || 0), 0));
+            const totalCredit = roundCents(state.draftLines.reduce((sum, l) => sum + (l.credit || 0), 0));
+            const diff = roundCents(totalDebit - totalCredit);
+
+            document.getElementById('totalDebitDisplay').textContent = formatEuro(totalDebit);
+            document.getElementById('totalCreditDisplay').textContent = formatEuro(totalCredit);
+
+            const badge = document.getElementById('balanceStatusBadge');
+            const saveBtn = document.getElementById('saveEntryBtn');
+
+            if (totalDebit === 0 && totalCredit === 0) {
+                badge.textContent = 'Voer bedragen in';
+                badge.className = 'balance-badge balance-err';
+                saveBtn.disabled = true;
+            } else if (diff === 0) {
+                badge.textContent = 'In balans (Verschil € 0,00)';
+                badge.className = 'balance-badge balance-ok';
+                saveBtn.disabled = false;
+            } else {
+                badge.textContent = `Niet in balans (Verschil ${formatEuro(Math.abs(diff))})`;
+                badge.className = 'balance-badge balance-err';
+                saveBtn.disabled = true;
+            }
+        }
+
+        // Event handlers voor Journaal & NLP
+        function triggerNlpParse() {
+            const inp = document.getElementById('nlpInput');
+            const parsed = parseNaturalLanguageInput(inp.value);
+            if (!parsed) return;
+
+            document.getElementById('entryDate').value = parsed.date;
+            document.getElementById('entryDesc').value = parsed.description;
+            document.getElementById('entryJournalType').value = parsed.journalType;
+            state.draftLines = parsed.lines;
+            renderJournalLines();
+            showToast('Regel gesplitst in debet- en creditregels. Controleer en sla op.');
+        }
+
+        document.getElementById('nlpParseBtn').addEventListener('click', triggerNlpParse);
+        document.getElementById('nlpInput').addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                triggerNlpParse();
+            }
+        });
+
+        document.querySelectorAll('.nlp-chip').forEach(chip => {
+            chip.addEventListener('click', () => {
+                document.getElementById('nlpInput').value = chip.dataset.example;
+                triggerNlpParse();
+            });
+        });
+
+        document.getElementById('addLineBtn').addEventListener('click', () => {
+            state.draftLines.push({ accountCode: '4300', memo: '', debit: 0, credit: 0 });
+            renderJournalLines();
+        });
+
+        document.getElementById('resetEntryBtn').addEventListener('click', () => {
+            document.getElementById('nlpInput').value = '';
+            resetJournalForm();
+        });
+
+        document.getElementById('saveEntryBtn').addEventListener('click', async () => {
+            const date = document.getElementById('entryDate').value;
+            const description = document.getElementById('entryDesc').value.trim();
+            const journalType = document.getElementById('entryJournalType').value;
+
+            if (!date || !description) {
+                showToast('Vul een boekdatum en omschrijving in.');
+                return;
+            }
+
+            const validLines = state.draftLines.filter(l => (l.debit > 0 || l.credit > 0));
+            const totalDebit = roundCents(validLines.reduce((s, l) => s + l.debit, 0));
+            const totalCredit = roundCents(validLines.reduce((s, l) => s + l.credit, 0));
+
+            if (validLines.length < 2 || totalDebit !== totalCredit || totalDebit <= 0) {
+                showToast('Boeking moet in balans zijn en minimaal 2 regels bevatten.');
+                return;
+            }
+
+            try {
+                await saveEntryToDB({
+                    date,
+                    description,
+                    journalType,
+                    lines: validLines,
+                    createdAt: new Date().toISOString()
+                });
+                document.getElementById('nlpInput').value = '';
+                resetJournalForm();
+                await refreshAllData();
+                showToast('Journaalpost opgeslagen en saldi bijgewerkt.');
+            } catch (err) {
+                showToast(err.message);
+            }
+        });
+
+        /* === RENDERING VAN TABELLEN & DASHBOARD === */
+        function getAccountName(code) {
+            const found = state.accounts.find(a => a.code === code);
+            return found ? found.name : 'Onbekend';
+        }
+
+        function renderEntriesTable() {
+            const tbody = document.getElementById('entriesTableBody');
+            document.getElementById('entryCountLabel').textContent = state.entries.length;
+
+            if (state.entries.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--text-muted); padding: 24px;">Nog geen boekingen opgeslagen. Gebruik de slimme invoerbalk hierboven om te starten.</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = state.entries.map(entry => {
+                const total = entry.lines.reduce((s, l) => s + l.debit, 0);
+                const linesSummary = entry.lines.map(l => {
+                    const side = l.debit > 0 ? `D ${formatEuro(l.debit)}` : `C ${formatEuro(l.credit)}`;
+                    return `<div style="font-size: 12px; color: var(--text-muted); font-family: var(--font-mono);">${l.accountCode} ${escapeHtml(getAccountName(l.accountCode))} — <strong>${side}</strong></div>`;
+                }).join('');
+
+                return `
+                    <tr>
+                        <td class="mono" style="color: var(--text-muted);">#${entry.id}</td>
+                        <td class="mono">${escapeHtml(entry.date)}</td>
+                        <td><span class="badge badge-activa">${escapeHtml(entry.journalType)}</span></td>
+                        <td>
+                            <div style="font-weight: 600; margin-bottom: 4px;">${escapeHtml(entry.description)}</div>
+                            ${linesSummary}
+                        </td>
+                        <td class="mono text-right" style="font-weight: 600;">${formatEuro(total)}</td>
+                        <td class="text-right">
+                            <button class="btn btn-danger-ghost" onclick="handleDeleteEntry(${entry.id})" title="Verwijder boeking">✕</button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        async function handleDeleteEntry(id) {
+            if (!confirm(`Weet je zeker dat je boeking #${id} wilt verwijderen?`)) return;
+            await deleteEntryFromDB(id);
+            await refreshAllData();
+            showToast(`Boeking #${id} verwijderd.`);
+        }
+
         function renderAccountsTable() {
             const tbody = document.getElementById('accountsTableBody');
             const search = document.getElementById('accountSearch').value.toLowerCase().trim();
@@ -928,26 +1558,78 @@
             document.getElementById('accountCountLabel').textContent = `${filtered.length} van ${state.accounts.length} rekeningen weergegeven`;
 
             if (filtered.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: var(--text-muted); padding: 24px;">Geen grootboekrekeningen gevonden voor deze zoekopdracht.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: var(--text-muted); padding: 24px;">Geen grootboekrekeningen gevonden.</td></tr>`;
                 return;
             }
 
             tbody.innerHTML = filtered.map(acc => {
                 const badgeClass = `badge-${acc.category.toLowerCase()}`;
                 const vatLabel = acc.defaultVat === 'N/A' ? '—' : `${acc.defaultVat}%`;
+                const rawBal = state.accountBalances[acc.code] || 0;
+                // Voor Passiva en Opbrengsten tonen we een creditsaldo positief
+                const displayBal = (acc.category === 'Passiva' || acc.category === 'Opbrengsten') ? -rawBal : rawBal;
+                const balColor = displayBal === 0 ? 'var(--text-muted)' : 'var(--text-main)';
+
                 return `
                     <tr>
                         <td class="mono" style="font-weight: 600;">${escapeHtml(acc.code)}</td>
                         <td>${escapeHtml(acc.name)}</td>
                         <td><span class="badge ${badgeClass}">${escapeHtml(acc.category)}</span></td>
                         <td class="mono">${vatLabel}</td>
-                        <td class="mono" style="text-align: right; color: var(--text-muted);">€ 0,00</td>
+                        <td class="mono text-right" style="font-weight: 600; color: ${balColor};">${formatEuro(displayBal)}</td>
                     </tr>
                 `;
             }).join('');
         }
 
-        // Nieuw grootboekrekening formulier afhandelen
+        function renderDashboard() {
+            let revenue = 0;
+            let expenses = 0;
+
+            state.accounts.forEach(acc => {
+                const rawBal = state.accountBalances[acc.code] || 0;
+                if (acc.category === 'Opbrengsten') {
+                    revenue = roundCents(revenue - rawBal); // Credit is omzet
+                } else if (acc.category === 'Kosten') {
+                    expenses = roundCents(expenses + rawBal); // Debet is kosten
+                }
+            });
+
+            // BTW-rekeningen: 1510 + 1520 (credit = af te dragen) minus 1530 (debet = voorbelasting)
+            const vatPayable = roundCents(-(state.accountBalances['1510'] || 0) - (state.accountBalances['1520'] || 0));
+            const vatReceivable = roundCents(state.accountBalances['1530'] || 0);
+            const vatNet = roundCents(vatPayable - vatReceivable);
+            const netProfit = roundCents(revenue - expenses);
+
+            document.getElementById('kpiRevenue').textContent = formatEuro(revenue);
+            document.getElementById('kpiExpenses').textContent = formatEuro(expenses);
+            document.getElementById('kpiVatBalance').textContent = formatEuro(vatNet);
+
+            const profitEl = document.getElementById('kpiNetProfit');
+            profitEl.textContent = formatEuro(netProfit);
+            profitEl.style.color = netProfit >= 0 ? 'var(--success)' : 'var(--danger)';
+
+            // Recente boekingen op dashboard
+            const dashBody = document.getElementById('dashboardRecentBody');
+            const recent = state.entries.slice(0, 5);
+            if (recent.length === 0) {
+                dashBody.innerHTML = `<tr><td colspan="4" style="text-align: center; color: var(--text-muted); padding: 24px;">Nog geen boekingen vastgelegd. Klik rechtsboven op <strong>+ Nieuwe boeking</strong> om te beginnen.</td></tr>`;
+            } else {
+                dashBody.innerHTML = recent.map(e => {
+                    const total = e.lines.reduce((s, l) => s + l.debit, 0);
+                    return `
+                        <tr>
+                            <td class="mono">${escapeHtml(e.date)}</td>
+                            <td style="font-weight: 500;">${escapeHtml(e.description)}</td>
+                            <td><span class="badge badge-activa">${escapeHtml(e.journalType)}</span></td>
+                            <td class="mono text-right" style="font-weight: 600;">${formatEuro(total)}</td>
+                        </tr>
+                    `;
+                }).join('');
+            }
+        }
+
+        // Nieuw grootboekrekening formulier
         document.getElementById('newAccountForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const code = document.getElementById('accCode').value.trim();
@@ -962,8 +1644,7 @@
 
             try {
                 await addAccountToDB({ code, name, category, defaultVat });
-                await loadAccountsFromDB();
-                updateDbStatus(true);
+                await refreshAllData();
                 e.target.reset();
                 showToast(`Rekening ${code} (${name}) opgeslagen.`);
             } catch (err) {
@@ -985,6 +1666,7 @@
         };
 
         const commands = [
+            { id: 'act-quick-book', label: 'Nieuwe boeking maken (Snel-invoer)', category: 'Actie', action: () => { switchView('journaal'); document.getElementById('nlpInput').focus(); } },
             { id: 'nav-dashboard', label: 'Ga naar Overzicht & Balans', category: 'Navigatie', action: () => switchView('dashboard') },
             { id: 'nav-journaal', label: 'Ga naar Journaal & Snelboeken', category: 'Navigatie', action: () => switchView('journaal') },
             { id: 'nav-relaties', label: 'Ga naar Debiteuren & Crediteuren', category: 'Navigatie', action: () => switchView('relaties') },
@@ -1022,7 +1704,7 @@
             el.textContent = msg;
             el.classList.add('show');
             clearTimeout(el._timer);
-            el._timer = setTimeout(() => el.classList.remove('show'), 3200);
+            el._timer = setTimeout(() => el.classList.remove('show'), 3400);
         }
 
         function escapeHtml(str) {
@@ -1099,7 +1781,10 @@
 
         document.getElementById('themeToggle').addEventListener('click', toggleTheme);
         document.getElementById('openCmdBtn').addEventListener('click', openCommandPalette);
-        document.getElementById('quickEntryBtn').addEventListener('click', () => switchView('journaal'));
+        document.getElementById('quickEntryBtn').addEventListener('click', () => {
+            switchView('journaal');
+            document.getElementById('nlpInput').focus();
+        });
         cmdBackdrop.addEventListener('click', (e) => {
             if (e.target === cmdBackdrop) closeCommandPalette();
         });
@@ -1144,7 +1829,9 @@
         updateClock();
         setInterval(updateClock, 30000);
 
-        initDatabase();
+        initDatabase().then(() => {
+            resetJournalForm();
+        });
     </script>
 </body>
 </html>

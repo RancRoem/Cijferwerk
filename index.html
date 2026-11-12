@@ -9,6 +9,7 @@
         :root {
             --bg-app: #f4f5f7;
             --bg-surface: #ffffff;
+            --bg-subtle: #f9fafb;
             --bg-sidebar: #111827;
             --bg-sidebar-hover: #1f2937;
             --bg-sidebar-active: #2563eb;
@@ -19,9 +20,13 @@
             --text-sidebar-active: #ffffff;
             --accent: #2563eb;
             --accent-hover: #1d4ed8;
+            --accent-soft: rgba(37, 99, 235, 0.1);
             --success: #10b981;
+            --success-soft: rgba(16, 185, 129, 0.12);
             --warning: #f59e0b;
+            --warning-soft: rgba(245, 158, 11, 0.12);
             --danger: #ef4444;
+            --danger-soft: rgba(239, 68, 68, 0.12);
             --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
             --shadow-lg: 0 20px 25px -5px rgba(0, 0, 0, 0.15), 0 10px 10px -5px rgba(0, 0, 0, 0.08);
             --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
@@ -31,6 +36,7 @@
         [data-theme="dark"] {
             --bg-app: #0f172a;
             --bg-surface: #1e293b;
+            --bg-subtle: #162032;
             --bg-sidebar: #090d16;
             --bg-sidebar-hover: #1e293b;
             --bg-sidebar-active: #3b82f6;
@@ -39,6 +45,7 @@
             --text-muted: #94a3b8;
             --accent: #3b82f6;
             --accent-hover: #60a5fa;
+            --accent-soft: rgba(59, 130, 246, 0.15);
         }
 
         * {
@@ -67,7 +74,6 @@
             overflow: hidden;
         }
 
-        /* Zijbalk */
         .sidebar {
             width: 240px;
             background-color: var(--bg-sidebar);
@@ -161,7 +167,6 @@
             align-items: center;
         }
 
-        /* Hoofdgebied */
         .main-wrapper {
             flex: 1;
             display: flex;
@@ -169,7 +174,6 @@
             overflow: hidden;
         }
 
-        /* Bovenste Werkbalk */
         .topbar {
             height: 56px;
             background-color: var(--bg-surface);
@@ -234,6 +238,7 @@
             align-items: center;
             gap: 6px;
             transition: all 0.15s;
+            font-family: var(--font-sans);
         }
 
         .btn:hover {
@@ -250,11 +255,11 @@
             background-color: var(--accent-hover);
         }
 
-        /* Werkveld (Views) */
         .workspace {
             flex: 1;
             padding: 24px;
             overflow-y: auto;
+            user-select: text;
         }
 
         .view-section {
@@ -267,7 +272,7 @@
             display: block;
         }
 
-        /* Placeholder Kaarten voor Stap 1 */
+        /* === KAARTEN, TABELLEN & FORMULIEREN === */
         .grid-cards {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
@@ -295,6 +300,136 @@
             font-weight: 700;
             font-family: var(--font-mono);
         }
+
+        .panel {
+            background-color: var(--bg-surface);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            box-shadow: var(--shadow-sm);
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+
+        .panel-header {
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+        }
+
+        .panel-title {
+            font-size: 15px;
+            font-weight: 600;
+        }
+
+        .toolbar-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .input, .select {
+            padding: 7px 11px;
+            border-radius: 6px;
+            border: 1px solid var(--border-color);
+            background-color: var(--bg-app);
+            color: var(--text-main);
+            font-size: 13px;
+            font-family: var(--font-sans);
+            outline: none;
+            transition: border-color 0.15s;
+        }
+
+        .input:focus, .select:focus {
+            border-color: var(--accent);
+            background-color: var(--bg-surface);
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: 110px 1fr 160px 140px auto;
+            gap: 10px;
+            padding: 16px 20px;
+            background-color: var(--bg-subtle);
+            border-bottom: 1px solid var(--border-color);
+            align-items: end;
+        }
+
+        @media (max-width: 900px) {
+            .form-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
+        .field-group {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .field-label {
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+        }
+
+        .table-wrap {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+            font-size: 13px;
+        }
+
+        th {
+            padding: 11px 20px;
+            background-color: var(--bg-subtle);
+            color: var(--text-muted);
+            font-weight: 600;
+            font-size: 12px;
+            border-bottom: 1px solid var(--border-color);
+            white-space: nowrap;
+        }
+
+        td {
+            padding: 11px 20px;
+            border-bottom: 1px solid var(--border-color);
+            vertical-align: middle;
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        tr:hover td {
+            background-color: var(--bg-subtle);
+        }
+
+        .mono {
+            font-family: var(--font-mono);
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 999px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .badge-activa { background: var(--accent-soft); color: var(--accent); }
+        .badge-passiva { background: var(--warning-soft); color: var(--warning); }
+        .badge-kosten { background: var(--danger-soft); color: var(--danger); }
+        .badge-opbrengsten { background: var(--success-soft); color: var(--success); }
 
         .empty-state {
             background-color: var(--bg-surface);
@@ -330,8 +465,35 @@
             width: 8px;
             height: 8px;
             border-radius: 50%;
-            background-color: var(--success);
+            background-color: var(--warning);
             margin-right: 6px;
+        }
+
+        .status-dot.online {
+            background-color: var(--success);
+        }
+
+        /* Toast notificatie */
+        .toast {
+            position: fixed;
+            bottom: 42px;
+            right: 24px;
+            background-color: var(--bg-sidebar);
+            color: #ffffff;
+            padding: 10px 16px;
+            border-radius: 6px;
+            font-size: 13px;
+            box-shadow: var(--shadow-lg);
+            opacity: 0;
+            transform: translateY(10px);
+            pointer-events: none;
+            transition: opacity 0.2s, transform 0.2s;
+            z-index: 2000;
+        }
+
+        .toast.show {
+            opacity: 1;
+            transform: translateY(0);
         }
 
         /* === COMMAND PALETTE MODAL === */
@@ -490,8 +652,8 @@
                         </div>
                     </div>
                     <div class="empty-state">
-                        <h3>Stap 1 voltooid: Desktop-interface staat klaar</h3>
-                        <p>Gebruik <strong>Ctrl+K</strong> (of Cmd+K op Mac) om het Command Palette te testen en tussen schermen te schakelen.</p>
+                        <h3>Stap 2 voltooid: Lokale database & Grootboekschema actief</h3>
+                        <p>Klik in het menu op <strong>Grootboekschema</strong> (of druk op <span class="kbd-badge">G</span> gevolgd door <span class="kbd-badge">G</span>) om het Nederlandse rekeningschema te bekijken en uit te breiden.</p>
                     </div>
                 </section>
 
@@ -499,7 +661,7 @@
                 <section id="view-journaal" class="view-section">
                     <div class="empty-state">
                         <h3>Journaal & Snel-invoer</h3>
-                        <p>In de volgende stap bouwen we hier de database-opslag (IndexedDB) en de slimme snel-invoerregel.</p>
+                        <p>In Stap 3 bouwen we hier het dubbel boekhouden met slimme snel-invoer (bijv. <em>"12-11 KPN 54,45 21% kantoor"</em>).</p>
                     </div>
                 </section>
 
@@ -521,9 +683,71 @@
 
                 <!-- VIEW: GROOTBOEK -->
                 <section id="view-grootboek" class="view-section">
-                    <div class="empty-state">
-                        <h3>Grootboekrekeningen</h3>
-                        <p>Standaard Nederlands grootboekschema (activa, passiva, kosten en opbrengsten).</p>
+                    <div class="panel">
+                        <div class="panel-header">
+                            <div>
+                                <div class="panel-title">Nederlands Grootboekschema</div>
+                                <div style="font-size: 12px; color: var(--text-muted);" id="accountCountLabel">0 rekeningen geladen</div>
+                            </div>
+                            <div class="toolbar-row">
+                                <input type="text" class="input" id="accountSearch" placeholder="Zoek op nummer of naam..." style="width: 220px;">
+                                <select class="select" id="accountCategoryFilter">
+                                    <option value="ALL">Alle categorieën</option>
+                                    <option value="Activa">Activa (Bezittingen)</option>
+                                    <option value="Passiva">Passiva (Schulden & EV)</option>
+                                    <option value="Kosten">Kosten</option>
+                                    <option value="Opbrengsten">Opbrengsten</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Nieuw grootboekrekening formulier -->
+                        <form class="form-grid" id="newAccountForm">
+                            <div class="field-group">
+                                <label class="field-label" for="accCode">Nummer</label>
+                                <input type="text" class="input mono" id="accCode" placeholder="bv. 4650" required maxlength="6">
+                            </div>
+                            <div class="field-group">
+                                <label class="field-label" for="accName">Omschrijving</label>
+                                <input type="text" class="input" id="accName" placeholder="bv. Software & Cloudabonnementen" required>
+                            </div>
+                            <div class="field-group">
+                                <label class="field-label" for="accCategory">Categorie</label>
+                                <select class="select" id="accCategory">
+                                    <option value="Kosten">Kosten</option>
+                                    <option value="Opbrengsten">Opbrengsten</option>
+                                    <option value="Activa">Activa</option>
+                                    <option value="Passiva">Passiva</option>
+                                </select>
+                            </div>
+                            <div class="field-group">
+                                <label class="field-label" for="accVat">Standaard BTW</label>
+                                <select class="select" id="accVat">
+                                    <option value="21">21% Hoog</option>
+                                    <option value="9">9% Laag</option>
+                                    <option value="0">0% / Vrijgesteld</option>
+                                    <option value="N/A">Geen BTW</option>
+                                </select>
+                            </div>
+                            <button type="submit" class="btn btn-primary">+ Toevoegen</button>
+                        </form>
+
+                        <div class="table-wrap">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th style="width: 110px;">Rekening</th>
+                                        <th>Omschrijving</th>
+                                        <th style="width: 150px;">Categorie</th>
+                                        <th style="width: 130px;">Standaard BTW</th>
+                                        <th style="width: 140px; text-align: right;">Saldo</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="accountsTableBody">
+                                    <tr><td colspan="5" style="text-align: center; color: var(--text-muted);">Database laden...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </section>
 
@@ -538,11 +762,14 @@
 
             <!-- STATUSBAR -->
             <footer class="statusbar">
-                <div><span class="status-dot"></span>Lokale database gereed (Offline-first)</div>
+                <div><span class="status-dot" id="dbStatusDot"></span><span id="dbStatusText">Database verbinden...</span></div>
                 <div id="clockDisplay"></div>
             </footer>
         </div>
     </div>
+
+    <!-- TOAST NOTIFICATIE -->
+    <div class="toast" id="toastEl"></div>
 
     <!-- COMMAND PALETTE MODAL -->
     <div class="modal-backdrop" id="cmdBackdrop">
@@ -555,12 +782,199 @@
     </div>
 
     <script>
-        /* === STAP 1: UI NAVIGATIE, THEMA & COMMAND PALETTE === */
+        /* === STAP 2: INDEXEDDB DATABASE & NEDERLANDS GROOTBOEKSCHEMA === */
+        const DB_NAME = 'CijferwerkDB';
+        const DB_VERSION = 1;
+
+        const DEFAULT_ACCOUNTS = [
+            // Activa (0xxx - 1xxx)
+            { code: '0100', name: 'Inventaris & Apparatuur', category: 'Activa', defaultVat: '21' },
+            { code: '1000', name: 'Kas', category: 'Activa', defaultVat: 'N/A' },
+            { code: '1100', name: 'Zakelijke Bankrekening', category: 'Activa', defaultVat: 'N/A' },
+            { code: '1200', name: 'Spaarrekening (Belastingreservering)', category: 'Activa', defaultVat: 'N/A' },
+            { code: '1300', name: 'Debiteuren (Nog te ontvangen)', category: 'Activa', defaultVat: 'N/A' },
+            // Passiva (05xx - 16xx)
+            { code: '0500', name: 'Eigen Vermogen', category: 'Passiva', defaultVat: 'N/A' },
+            { code: '0550', name: 'Privé-opnamen & Stortingen', category: 'Passiva', defaultVat: 'N/A' },
+            { code: '1510', name: 'Af te dragen BTW 21% (1a)', category: 'Passiva', defaultVat: 'N/A' },
+            { code: '1520', name: 'Af te dragen BTW 9% (1b)', category: 'Passiva', defaultVat: 'N/A' },
+            { code: '1530', name: 'Te vorderen Voorbelasting (5b)', category: 'Activa', defaultVat: 'N/A' },
+            { code: '1600', name: 'Crediteuren (Nog te betalen)', category: 'Passiva', defaultVat: 'N/A' },
+            // Kosten (4xxx - 7xxx)
+            { code: '4100', name: 'Huisvestingskosten & Werkruimte', category: 'Kosten', defaultVat: '21' },
+            { code: '4300', name: 'Kantoorkosten & Vakliteratuur', category: 'Kosten', defaultVat: '21' },
+            { code: '4400', name: 'Telefoon, Internet & Hosting', category: 'Kosten', defaultVat: '21' },
+            { code: '4500', name: 'Software & Licenties', category: 'Kosten', defaultVat: '21' },
+            { code: '4600', name: 'Reis- en Verblijfkosten', category: 'Kosten', defaultVat: '9' },
+            { code: '4700', name: 'Marketing & Acquisitie', category: 'Kosten', defaultVat: '21' },
+            { code: '4800', name: 'Bankkosten & Verzekeringen', category: 'Kosten', defaultVat: '0' },
+            { code: '4900', name: 'Accountancy & Juridisch Advies', category: 'Kosten', defaultVat: '21' },
+            { code: '7000', name: 'Inkoopwaarde Omzet / Uitbesteed werk', category: 'Kosten', defaultVat: '21' },
+            // Opbrengsten (8xxx)
+            { code: '8000', name: 'Omzet Diensten & Consultancy (21%)', category: 'Opbrengsten', defaultVat: '21' },
+            { code: '8100', name: 'Omzet Producten Hoog Tarief (21%)', category: 'Opbrengsten', defaultVat: '21' },
+            { code: '8200', name: 'Omzet Laag Tarief (9%)', category: 'Opbrengsten', defaultVat: '9' },
+            { code: '8300', name: 'Omzet Buitenland / Verlegd (0%)', category: 'Opbrengsten', defaultVat: '0' }
+        ];
+
         const state = {
+            db: null,
+            accounts: [],
+            entries: [],
             currentView: 'dashboard',
-            selectedCmdIndex: 0
+            selectedCmdIndex: 0,
+            lastKeyG: false
         };
 
+        // IndexedDB Wrapper
+        function initDatabase() {
+            return new Promise((resolve, reject) => {
+                const request = indexedDB.open(DB_NAME, DB_VERSION);
+
+                request.onupgradeneeded = (e) => {
+                    const db = e.target.result;
+                    if (!db.objectStoreNames.contains('accounts')) {
+                        db.createObjectStore('accounts', { keyPath: 'code' });
+                    }
+                    if (!db.objectStoreNames.contains('entries')) {
+                        const entryStore = db.createObjectStore('entries', { keyPath: 'id', autoIncrement: true });
+                        entryStore.createIndex('date', 'date', { unique: false });
+                    }
+                    if (!db.objectStoreNames.contains('receipts')) {
+                        db.createObjectStore('receipts', { keyPath: 'id', autoIncrement: true });
+                    }
+                };
+
+                request.onsuccess = async (e) => {
+                    state.db = e.target.result;
+                    await seedDefaultAccountsIfEmpty();
+                    await loadAccountsFromDB();
+                    updateDbStatus(true);
+                    resolve();
+                };
+
+                request.onerror = (e) => {
+                    console.error('IndexedDB fout:', e.target.error);
+                    updateDbStatus(false);
+                    reject(e.target.error);
+                };
+            });
+        }
+
+        function seedDefaultAccountsIfEmpty() {
+            return new Promise((resolve) => {
+                const tx = state.db.transaction('accounts', 'readwrite');
+                const store = tx.objectStore('accounts');
+                const countReq = store.count();
+
+                countReq.onsuccess = () => {
+                    if (countReq.result === 0) {
+                        DEFAULT_ACCOUNTS.forEach(acc => store.put(acc));
+                    }
+                };
+                tx.oncomplete = () => resolve();
+            });
+        }
+
+        function loadAccountsFromDB() {
+            return new Promise((resolve) => {
+                const tx = state.db.transaction('accounts', 'readonly');
+                const store = tx.objectStore('accounts');
+                const req = store.getAll();
+
+                req.onsuccess = () => {
+                    state.accounts = req.result.sort((a, b) => a.code.localeCompare(b.code));
+                    renderAccountsTable();
+                    resolve();
+                };
+            });
+        }
+
+        function addAccountToDB(account) {
+            return new Promise((resolve, reject) => {
+                const tx = state.db.transaction('accounts', 'readwrite');
+                const store = tx.objectStore('accounts');
+                const req = store.add(account);
+
+                req.onsuccess = () => resolve();
+                req.onerror = () => reject(new Error('Rekeningnummer bestaat al.'));
+            });
+        }
+
+        function updateDbStatus(isConnected) {
+            const dot = document.getElementById('dbStatusDot');
+            const text = document.getElementById('dbStatusText');
+            if (isConnected) {
+                dot.classList.add('online');
+                text.textContent = `CijferwerkDB verbonden (${state.accounts.length} grootboekrekeningen)`;
+            } else {
+                dot.classList.remove('online');
+                text.textContent = 'Database fout (controleer browserinstellingen)';
+            }
+        }
+
+        // Grootboek tabel renderen
+        function renderAccountsTable() {
+            const tbody = document.getElementById('accountsTableBody');
+            const search = document.getElementById('accountSearch').value.toLowerCase().trim();
+            const catFilter = document.getElementById('accountCategoryFilter').value;
+
+            const filtered = state.accounts.filter(acc => {
+                const matchesCat = catFilter === 'ALL' || acc.category === catFilter;
+                const matchesSearch = acc.code.toLowerCase().includes(search) || acc.name.toLowerCase().includes(search);
+                return matchesCat && matchesSearch;
+            });
+
+            document.getElementById('accountCountLabel').textContent = `${filtered.length} van ${state.accounts.length} rekeningen weergegeven`;
+
+            if (filtered.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: var(--text-muted); padding: 24px;">Geen grootboekrekeningen gevonden voor deze zoekopdracht.</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = filtered.map(acc => {
+                const badgeClass = `badge-${acc.category.toLowerCase()}`;
+                const vatLabel = acc.defaultVat === 'N/A' ? '—' : `${acc.defaultVat}%`;
+                return `
+                    <tr>
+                        <td class="mono" style="font-weight: 600;">${escapeHtml(acc.code)}</td>
+                        <td>${escapeHtml(acc.name)}</td>
+                        <td><span class="badge ${badgeClass}">${escapeHtml(acc.category)}</span></td>
+                        <td class="mono">${vatLabel}</td>
+                        <td class="mono" style="text-align: right; color: var(--text-muted);">€ 0,00</td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        // Nieuw grootboekrekening formulier afhandelen
+        document.getElementById('newAccountForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const code = document.getElementById('accCode').value.trim();
+            const name = document.getElementById('accName').value.trim();
+            const category = document.getElementById('accCategory').value;
+            const defaultVat = document.getElementById('accVat').value;
+
+            if (!/^\d{4,6}$/.test(code)) {
+                showToast('Gebruik een rekeningnummer van 4 tot 6 cijfers.');
+                return;
+            }
+
+            try {
+                await addAccountToDB({ code, name, category, defaultVat });
+                await loadAccountsFromDB();
+                updateDbStatus(true);
+                e.target.reset();
+                showToast(`Rekening ${code} (${name}) opgeslagen.`);
+            } catch (err) {
+                showToast(err.message);
+            }
+        });
+
+        document.getElementById('accountSearch').addEventListener('input', renderAccountsTable);
+        document.getElementById('accountCategoryFilter').addEventListener('change', renderAccountsTable);
+
+        /* === UI NAVIGATIE, SNELTOETSEN & COMMAND PALETTE === */
         const viewTitles = {
             dashboard: 'Overzicht & Balans',
             journaal: 'Journaal & Snelboeken',
@@ -577,10 +991,10 @@
             { id: 'nav-btw', label: 'Ga naar BTW-Aangifte', category: 'Navigatie', action: () => switchView('btw') },
             { id: 'nav-grootboek', label: 'Ga naar Grootboekschema', category: 'Navigatie', action: () => switchView('grootboek') },
             { id: 'nav-backup', label: 'Ga naar Archief & Back-up', category: 'Navigatie', action: () => switchView('backup') },
+            { id: 'act-new-acc', label: 'Nieuwe grootboekrekening aanmaken', category: 'Actie', action: () => { switchView('grootboek'); document.getElementById('accCode').focus(); } },
             { id: 'act-theme', label: 'Wissel tussen Licht en Donker thema', category: 'Weergave', action: () => toggleTheme() }
         ];
 
-        // Scherm wisselen
         function switchView(viewName) {
             if (!viewTitles[viewName]) return;
             state.currentView = viewName;
@@ -596,7 +1010,6 @@
             document.getElementById('currentViewTitle').textContent = viewTitles[viewName];
         }
 
-        // Thema wisselen
         function toggleTheme() {
             const html = document.documentElement;
             const next = html.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
@@ -604,7 +1017,19 @@
             localStorage.setItem('cijferwerk_theme', next);
         }
 
-        // Command Palette logica
+        function showToast(msg) {
+            const el = document.getElementById('toastEl');
+            el.textContent = msg;
+            el.classList.add('show');
+            clearTimeout(el._timer);
+            el._timer = setTimeout(() => el.classList.remove('show'), 3200);
+        }
+
+        function escapeHtml(str) {
+            return String(str).replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m]));
+        }
+
+        // Command Palette
         const cmdBackdrop = document.getElementById('cmdBackdrop');
         const cmdInput = document.getElementById('cmdInput');
         const cmdResults = document.getElementById('cmdResults');
@@ -679,15 +1104,34 @@
             if (e.target === cmdBackdrop) closeCommandPalette();
         });
 
-        // Globale sneltoets Ctrl+K / Cmd+K
+        // Globale sneltoetsen (Ctrl+K en G-navigatie)
         document.addEventListener('keydown', (e) => {
             if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
                 e.preventDefault();
                 cmdBackdrop.classList.contains('open') ? closeCommandPalette() : openCommandPalette();
+                return;
+            }
+
+            const tag = document.activeElement.tagName.toLowerCase();
+            if (tag === 'input' || tag === 'select' || tag === 'textarea' || cmdBackdrop.classList.contains('open')) {
+                return;
+            }
+
+            const key = e.key.toLowerCase();
+            if (state.lastKeyG) {
+                state.lastKeyG = false;
+                const map = { d: 'dashboard', j: 'journaal', r: 'relaties', b: 'btw', g: 'grootboek', a: 'backup' };
+                if (map[key]) {
+                    e.preventDefault();
+                    switchView(map[key]);
+                }
+            } else if (key === 'g') {
+                state.lastKeyG = true;
+                setTimeout(() => { state.lastKeyG = false; }, 1000);
             }
         });
 
-        // Klok en opgeslagen thema laden
+        // Initialisatie
         const savedTheme = localStorage.getItem('cijferwerk_theme');
         if (savedTheme) document.documentElement.setAttribute('data-theme', savedTheme);
 
@@ -699,6 +1143,8 @@
         }
         updateClock();
         setInterval(updateClock, 30000);
+
+        initDatabase();
     </script>
 </body>
 </html>

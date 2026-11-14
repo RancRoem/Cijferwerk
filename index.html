@@ -462,6 +462,68 @@
             align-items: center;
         }
 
+        /* Bonnetjes Drag & Drop Zone */
+        .receipt-dropzone {
+            margin-top: 14px;
+            border: 1.5px dashed var(--border-color);
+            border-radius: 8px;
+            padding: 12px 16px;
+            background-color: var(--bg-subtle);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            cursor: pointer;
+            transition: border-color 0.15s, background-color 0.15s;
+        }
+
+        .receipt-dropzone:hover, .receipt-dropzone.dragover {
+            border-color: var(--accent);
+            background-color: var(--accent-soft);
+        }
+
+        .receipt-drop-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+
+        .receipt-icon-box {
+            width: 32px;
+            height: 32px;
+            border-radius: 6px;
+            background-color: var(--bg-surface);
+            border: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: var(--font-mono);
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--accent);
+        }
+
+        .receipt-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 3px 9px;
+            border-radius: 6px;
+            background-color: var(--accent-soft);
+            color: var(--accent);
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            border: 1px solid transparent;
+            transition: border-color 0.15s;
+        }
+
+        .receipt-pill:hover {
+            border-color: var(--accent);
+        }
+
         .journal-footer {
             padding: 14px 20px;
             background-color: var(--bg-subtle);
@@ -668,15 +730,15 @@
             transform: translateY(0);
         }
 
-        /* === COMMAND PALETTE MODAL === */
+        /* === MODALS (COMMAND PALETTE & RECEIPT VIEWER) === */
         .modal-backdrop {
             position: fixed;
             inset: 0;
-            background-color: rgba(0, 0, 0, 0.5);
+            background-color: rgba(0, 0, 0, 0.55);
             display: none;
             align-items: flex-start;
             justify-content: center;
-            padding-top: 12vh;
+            padding-top: 8vh;
             z-index: 1000;
         }
 
@@ -739,6 +801,55 @@
         .cmd-category {
             font-size: 12px;
             color: var(--text-muted);
+        }
+
+        /* Receipt Preview Modal */
+        .viewer-modal {
+            width: 92%;
+            max-width: 860px;
+            background-color: var(--bg-surface);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            box-shadow: var(--shadow-lg);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            max-height: 84vh;
+        }
+
+        .viewer-header {
+            padding: 14px 20px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+        }
+
+        .viewer-body {
+            flex: 1;
+            overflow: auto;
+            padding: 20px;
+            background-color: var(--bg-app);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 420px;
+        }
+
+        .viewer-body img {
+            max-width: 100%;
+            max-height: 70vh;
+            border-radius: 6px;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .viewer-body iframe {
+            width: 100%;
+            height: 68vh;
+            border: none;
+            border-radius: 6px;
+            background: #ffffff;
         }
     </style>
 </head>
@@ -907,7 +1018,24 @@
                                 <span></span>
                             </div>
                             <div id="journalLinesContainer"></div>
-                            <div style="margin-top: 10px; display: flex; gap: 8px;">
+
+                            <!-- Bonnetje / Factuur Drag & Drop Zone -->
+                            <div class="receipt-dropzone" id="receiptDropzone">
+                                <div class="receipt-drop-info">
+                                    <div class="receipt-icon-box" id="receiptIconBox">BON</div>
+                                    <div>
+                                        <div style="font-weight: 600; color: var(--text-main);" id="receiptFileLabel">Sleep een bon of PDF hierheen, of klik om te kiezen</div>
+                                        <div style="font-size: 11px;" id="receiptFileSub">Ondersteunt JPG, PNG, WebP en PDF (wordt lokaal in IndexedDB opgeslagen)</div>
+                                    </div>
+                                </div>
+                                <div style="display: flex; gap: 8px; align-items: center;">
+                                    <button type="button" class="btn btn-sm" id="clearReceiptBtn" style="display: none;">Verwijder bijlage</button>
+                                    <span class="btn btn-sm">Bestand kiezen</span>
+                                </div>
+                                <input type="file" id="receiptFileInput" accept="image/*,application/pdf" style="display: none;">
+                            </div>
+
+                            <div style="margin-top: 12px; display: flex; gap: 8px;">
                                 <button type="button" class="btn" id="addLineBtn">+ Regel toevoegen</button>
                                 <button type="button" class="btn" id="resetEntryBtn">Formulier legen</button>
                             </div>
@@ -935,12 +1063,13 @@
                                         <th style="width: 110px;">Datum</th>
                                         <th style="width: 100px;">Dagboek</th>
                                         <th>Omschrijving & Journaalregels</th>
+                                        <th style="width: 130px;">Bijlage</th>
                                         <th style="width: 130px; text-align: right;">Debet / Credit</th>
                                         <th style="width: 60px;"></th>
                                     </tr>
                                 </thead>
                                 <tbody id="entriesTableBody">
-                                    <tr><td colspan="6" style="text-align: center; color: var(--text-muted); padding: 24px;">Nog geen boekingen opgeslagen.</td></tr>
+                                    <tr><td colspan="7" style="text-align: center; color: var(--text-muted); padding: 24px;">Nog geen boekingen opgeslagen.</td></tr>
                                 </tbody>
                             </table>
                         </div>
@@ -964,12 +1093,11 @@
                         </div>
                     </div>
 
-                    <!-- Debiteuren Tabel -->
                     <div class="panel">
                         <div class="panel-header">
                             <div>
                                 <div class="panel-title">Debiteuren — Nog te ontvangen van klanten (1300)</div>
-                                <div style="font-size: 12px; color: var(--text-muted);">Klik op <strong>Markeer als betaald</strong> om direct een ontvangstboeking op de bankrekening te maken.</div>
+                                <div style="font-size: 12px; color: var(--text-muted);">Klik op <strong>Markeer betaald</strong> om direct een ontvangstboeking op de bankrekening te maken.</div>
                             </div>
                             <label class="checkbox-label">
                                 <input type="checkbox" id="showPaidInvoices">
@@ -994,7 +1122,6 @@
                         </div>
                     </div>
 
-                    <!-- Crediteuren Tabel -->
                     <div class="panel">
                         <div class="panel-header">
                             <div>
@@ -1179,8 +1306,25 @@
         </div>
     </div>
 
+    <!-- RECEIPT PREVIEW MODAL -->
+    <div class="modal-backdrop" id="viewerBackdrop">
+        <div class="viewer-modal" role="dialog" aria-modal="true">
+            <div class="viewer-header">
+                <div>
+                    <div style="font-weight: 600;" id="viewerTitle">Bijlage bekijken</div>
+                    <div style="font-size: 12px; color: var(--text-muted);" id="viewerSubtitle"></div>
+                </div>
+                <div style="display: flex; gap: 8px;">
+                    <a class="btn btn-primary btn-sm" id="viewerDownloadBtn" download>Downloaden</a>
+                    <button type="button" class="btn btn-sm" id="closeViewerBtn">Sluiten (Esc)</button>
+                </div>
+            </div>
+            <div class="viewer-body" id="viewerBody"></div>
+        </div>
+    </div>
+
     <script>
-        /* === STAP 5: DEBITEUREN, CREDITEUREN, VERVALDATUMS & AFLETTEREN === */
+        /* === STAP 6: BONNETJES- & DOCUMENTKOPPELING IN INDEXEDDB === */
         const DB_NAME = 'CijferwerkDB';
         const DB_VERSION = 1;
 
@@ -1215,8 +1359,11 @@
             db: null,
             accounts: [],
             entries: [],
+            receiptsMeta: {}, // id -> { id, name, type, size }
             accountBalances: {},
             draftLines: [],
+            draftReceiptFile: null,
+            currentViewerUrl: null,
             currentView: 'dashboard',
             selectedCmdIndex: 0,
             lastKeyG: false,
@@ -1231,6 +1378,12 @@
                 minimumFractionDigits: wholeEuros ? 0 : 2,
                 maximumFractionDigits: wholeEuros ? 0 : 2
             }).format(val);
+        }
+
+        function formatFileSize(bytes) {
+            if (!bytes) return '0 KB';
+            if (bytes < 1024 * 1024) return `${Math.max(1, Math.round(bytes / 1024))} KB`;
+            return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
         }
 
         function roundCents(num) {
@@ -1302,6 +1455,7 @@
         async function refreshAllData() {
             await loadAccountsFromDB();
             await loadEntriesFromDB();
+            await loadReceiptsMetaFromDB();
             recalculateBalances();
             renderAccountsTable();
             renderEntriesTable();
@@ -1330,6 +1484,54 @@
                     state.entries = req.result.sort((a, b) => b.date.localeCompare(a.date) || b.id - a.id);
                     resolve();
                 };
+            });
+        }
+
+        function loadReceiptsMetaFromDB() {
+            return new Promise((resolve) => {
+                const tx = state.db.transaction('receipts', 'readonly');
+                const req = tx.objectStore('receipts').getAll();
+                req.onsuccess = () => {
+                    const map = {};
+                    req.result.forEach(r => {
+                        map[r.id] = { id: r.id, name: r.name, type: r.type, size: r.size };
+                    });
+                    state.receiptsMeta = map;
+                    resolve();
+                };
+            });
+        }
+
+        function saveReceiptToDB(file) {
+            return new Promise((resolve, reject) => {
+                const tx = state.db.transaction('receipts', 'readwrite');
+                const req = tx.objectStore('receipts').add({
+                    name: file.name,
+                    type: file.type,
+                    size: file.size,
+                    blob: file,
+                    uploadedAt: new Date().toISOString()
+                });
+                req.onsuccess = () => resolve(req.result);
+                req.onerror = () => reject(new Error('Fout bij opslaan van bijlage.'));
+            });
+        }
+
+        function getReceiptFromDB(receiptId) {
+            return new Promise((resolve, reject) => {
+                const tx = state.db.transaction('receipts', 'readonly');
+                const req = tx.objectStore('receipts').get(receiptId);
+                req.onsuccess = () => resolve(req.result);
+                req.onerror = () => reject(new Error('Bijlage niet gevonden.'));
+            });
+        }
+
+        function deleteReceiptFromDB(receiptId) {
+            return new Promise((resolve) => {
+                if (!receiptId) return resolve();
+                const tx = state.db.transaction('receipts', 'readwrite');
+                tx.objectStore('receipts').delete(receiptId);
+                tx.oncomplete = () => resolve();
             });
         }
 
@@ -1386,21 +1588,136 @@
         function updateDbStatus(isConnected) {
             const dot = document.getElementById('dbStatusDot');
             const text = document.getElementById('dbStatusText');
+            const receiptCount = Object.keys(state.receiptsMeta).length;
             if (isConnected) {
                 dot.classList.add('online');
-                text.textContent = `CijferwerkDB verbonden — ${state.entries.length} boekingen, ${state.accounts.length} grootboekrekeningen`;
+                text.textContent = `CijferwerkDB verbonden — ${state.entries.length} boekingen, ${receiptCount} bijlagen, ${state.accounts.length} rekeningen`;
             } else {
                 dot.classList.remove('online');
                 text.textContent = 'Database fout';
             }
         }
 
-        /* === DEBITEUREN & CREDITEUREN (OPENSTAANDE POSTEN) === */
+        /* === BONNETJES DRAG & DROP EN VIEWER === */
+        const dropzone = document.getElementById('receiptDropzone');
+        const fileInput = document.getElementById('receiptFileInput');
+        const clearReceiptBtn = document.getElementById('clearReceiptBtn');
+
+        function setDraftReceipt(file) {
+            if (!file) {
+                state.draftReceiptFile = null;
+                document.getElementById('receiptIconBox').textContent = 'BON';
+                document.getElementById('receiptFileLabel').textContent = 'Sleep een bon of PDF hierheen, of klik om te kiezen';
+                document.getElementById('receiptFileSub').textContent = 'Ondersteunt JPG, PNG, WebP en PDF (wordt lokaal in IndexedDB opgeslagen)';
+                clearReceiptBtn.style.display = 'none';
+                fileInput.value = '';
+                return;
+            }
+
+            const validTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'application/pdf'];
+            if (!validTypes.includes(file.type)) {
+                showToast('Alleen afbeeldingen (JPG, PNG, WebP) of PDF-bestanden worden ondersteund.');
+                return;
+            }
+
+            state.draftReceiptFile = file;
+            const ext = file.type === 'application/pdf' ? 'PDF' : 'IMG';
+            document.getElementById('receiptIconBox').textContent = ext;
+            document.getElementById('receiptFileLabel').textContent = file.name;
+            document.getElementById('receiptFileSub').textContent = `Klaar om te koppelen (${formatFileSize(file.size)})`;
+            clearReceiptBtn.style.display = 'inline-flex';
+        }
+
+        dropzone.addEventListener('click', (e) => {
+            if (e.target === clearReceiptBtn) return;
+            fileInput.click();
+        });
+
+        clearReceiptBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            setDraftReceipt(null);
+        });
+
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files && e.target.files[0]) {
+                setDraftReceipt(e.target.files[0]);
+            }
+        });
+
+        dropzone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropzone.classList.add('dragover');
+        });
+
+        dropzone.addEventListener('dragleave', () => {
+            dropzone.classList.remove('dragover');
+        });
+
+        dropzone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropzone.classList.remove('dragover');
+            if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+                setDraftReceipt(e.dataTransfer.files[0]);
+            }
+        });
+
+        // Viewer Modal voor opgeslagen bonnetjes
+        const viewerBackdrop = document.getElementById('viewerBackdrop');
+        const viewerBody = document.getElementById('viewerBody');
+
+        async function openReceiptViewer(receiptId) {
+            try {
+                const record = await getReceiptFromDB(receiptId);
+                if (!record || !record.blob) {
+                    showToast('Bijlage kon niet worden geladen.');
+                    return;
+                }
+
+                if (state.currentViewerUrl) {
+                    URL.revokeObjectURL(state.currentViewerUrl);
+                }
+
+                const url = URL.createObjectURL(record.blob);
+                state.currentViewerUrl = url;
+
+                document.getElementById('viewerTitle').textContent = record.name;
+                document.getElementById('viewerSubtitle').textContent = `${record.type} • ${formatFileSize(record.size)}`;
+
+                const dlBtn = document.getElementById('viewerDownloadBtn');
+                dlBtn.href = url;
+                dlBtn.download = record.name;
+
+                if (record.type === 'application/pdf') {
+                    viewerBody.innerHTML = `<iframe src="${url}" title="${escapeHtml(record.name)}"></iframe>`;
+                } else {
+                    viewerBody.innerHTML = `<img src="${url}" alt="${escapeHtml(record.name)}">`;
+                }
+
+                viewerBackdrop.classList.add('open');
+            } catch (err) {
+                showToast(err.message);
+            }
+        }
+
+        function closeReceiptViewer() {
+            viewerBackdrop.classList.remove('open');
+            viewerBody.innerHTML = '';
+            if (state.currentViewerUrl) {
+                URL.revokeObjectURL(state.currentViewerUrl);
+                state.currentViewerUrl = null;
+            }
+        }
+
+        document.getElementById('closeViewerBtn').addEventListener('click', closeReceiptViewer);
+        viewerBackdrop.addEventListener('click', (e) => {
+            if (e.target === viewerBackdrop) closeReceiptViewer();
+        });
+
+        /* === DEBITEUREN & CREDITEUREN === */
         function renderOpenItems() {
             const showPaid = document.getElementById('showPaidInvoices').checked;
             const todayStr = new Date().toISOString().split('T')[0];
 
-            // Verzamel openstaande posten uit journaalregels op 1300 (Debiteuren) en 1600 (Crediteuren)
             const debtors = [];
             const creditors = [];
 
@@ -1440,7 +1757,6 @@
             document.getElementById('openCreditorsTotal').textContent = formatEuro(openCreditorsSum);
             document.getElementById('bankBalanceTotal').textContent = formatEuro(bankBal);
 
-            // Render Debiteuren
             const visibleDebtors = showPaid ? debtors : debtors.filter(d => !d.isPaid);
             const debBody = document.getElementById('debtorsTableBody');
             if (visibleDebtors.length === 0) {
@@ -1468,7 +1784,6 @@
                 }).join('');
             }
 
-            // Render Crediteuren
             const visibleCreditors = showPaid ? creditors : creditors.filter(c => !c.isPaid);
             const credBody = document.getElementById('creditorsTableBody');
             if (visibleCreditors.length === 0) {
@@ -1495,20 +1810,13 @@
         }
 
         function buildDueStatusBadge(isPaid, dueDate, todayStr) {
-            if (isPaid) {
-                return `<span class="badge badge-opbrengsten">Voldaan</span>`;
-            }
+            if (isPaid) return `<span class="badge badge-opbrengsten">Voldaan</span>`;
             const diff = daysBetween(todayStr, dueDate);
-            if (diff < 0) {
-                return `<span class="badge badge-kosten">${Math.abs(diff)} dagen te laat</span>`;
-            } else if (diff <= 3) {
-                return `<span class="badge badge-passiva">Vervalt over ${diff} dgn</span>`;
-            } else {
-                return `<span class="badge badge-activa">Open (nog ${diff} dgn)</span>`;
-            }
+            if (diff < 0) return `<span class="badge badge-kosten">${Math.abs(diff)} dagen te laat</span>`;
+            if (diff <= 3) return `<span class="badge badge-passiva">Vervalt over ${diff} dgn</span>`;
+            return `<span class="badge badge-activa">Open (nog ${diff} dgn)</span>`;
         }
 
-        // Afletteren: maakt automatisch een bankboeking aan en markeert de factuur als betaald
         async function settleOpenItem(entryId, accountCode) {
             const entry = state.entries.find(e => e.id === entryId);
             if (!entry || entry.paid) return;
@@ -1573,7 +1881,7 @@
 
         document.getElementById('showPaidInvoices').addEventListener('change', renderOpenItems);
 
-        /* === BTW-AANGIFTE BEREKENING (NEDERLANDS MODEL) === */
+        /* === BTW-AANGIFTE === */
         function entryMatchesQuarter(dateStr, quarter) {
             if (quarter === 'ALL') return true;
             const parts = dateStr.split('-');
@@ -1601,12 +1909,7 @@
             const filteredEntries = state.entries.filter(e => entryMatchesQuarter(e.date, quarter));
             document.getElementById('vatPeriodSub').textContent = `Geselecteerde periode: ${quarterNames[quarter]} (${filteredEntries.length} boekingen meegenomen)`;
 
-            let base21 = 0;
-            let base9 = 0;
-            let base0 = 0;
-            let vat21 = 0;
-            let vat9 = 0;
-            let vatInput = 0;
+            let base21 = 0, base9 = 0, base0 = 0, vat21 = 0, vat9 = 0, vatInput = 0;
 
             filteredEntries.forEach(entry => {
                 entry.lines.forEach(line => {
@@ -1614,13 +1917,10 @@
                     const netCredit = roundCents(line.credit - line.debit);
                     const netDebit = roundCents(line.debit - line.credit);
 
-                    if (line.accountCode === '1510') {
-                        vat21 = roundCents(vat21 + netCredit);
-                    } else if (line.accountCode === '1520') {
-                        vat9 = roundCents(vat9 + netCredit);
-                    } else if (line.accountCode === '1530') {
-                        vatInput = roundCents(vatInput + netDebit);
-                    } else if (acc && acc.category === 'Opbrengsten') {
+                    if (line.accountCode === '1510') vat21 = roundCents(vat21 + netCredit);
+                    else if (line.accountCode === '1520') vat9 = roundCents(vat9 + netCredit);
+                    else if (line.accountCode === '1530') vatInput = roundCents(vatInput + netDebit);
+                    else if (acc && acc.category === 'Opbrengsten') {
                         if (acc.defaultVat === '21') base21 = roundCents(base21 + netCredit);
                         else if (acc.defaultVat === '9') base9 = roundCents(base9 + netCredit);
                         else base0 = roundCents(base0 + netCredit);
@@ -1816,6 +2116,7 @@
             document.getElementById('entryDesc').value = '';
             document.getElementById('entryJournalType').value = 'Inkoop';
             document.getElementById('entryTermDays').value = '14';
+            setDraftReceipt(null);
             state.draftLines = [
                 { accountCode: '4300', memo: '', debit: 0, credit: 0 },
                 { accountCode: '1600', memo: '', debit: 0, credit: 0 }
@@ -1982,6 +2283,11 @@
             }
 
             try {
+                let receiptId = null;
+                if (state.draftReceiptFile) {
+                    receiptId = await saveReceiptToDB(state.draftReceiptFile);
+                }
+
                 await saveEntryToDB({
                     date,
                     dueDate: addDaysToDate(date, termDays),
@@ -1989,13 +2295,14 @@
                     paid: termDays === 0,
                     description,
                     journalType,
+                    receiptId,
                     lines: validLines,
                     createdAt: new Date().toISOString()
                 });
                 document.getElementById('nlpInput').value = '';
                 resetJournalForm();
                 await refreshAllData();
-                showToast('Journaalpost opgeslagen en overzichten bijgewerkt.');
+                showToast(receiptId ? 'Boeking én bijlage opgeslagen in IndexedDB.' : 'Journaalpost opgeslagen.');
             } catch (err) {
                 showToast(err.message);
             }
@@ -2012,7 +2319,7 @@
             document.getElementById('entryCountLabel').textContent = state.entries.length;
 
             if (state.entries.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--text-muted); padding: 24px;">Nog geen boekingen opgeslagen.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: var(--text-muted); padding: 24px;">Nog geen boekingen opgeslagen.</td></tr>`;
                 return;
             }
 
@@ -2023,6 +2330,13 @@
                     return `<div style="font-size: 12px; color: var(--text-muted); font-family: var(--font-mono);">${l.accountCode} ${escapeHtml(getAccountName(l.accountCode))} — <strong>${side}</strong></div>`;
                 }).join('');
 
+                const receiptMeta = entry.receiptId ? state.receiptsMeta[entry.receiptId] : null;
+                const receiptCell = receiptMeta
+                    ? `<button type="button" class="receipt-pill" onclick="openReceiptViewer(${entry.receiptId})" title="${escapeHtml(receiptMeta.name)}">
+                        ${receiptMeta.type === 'application/pdf' ? 'PDF' : 'BON'} • Bekijk
+                       </button>`
+                    : `<span style="color: var(--text-muted); font-size: 12px;">—</span>`;
+
                 return `
                     <tr>
                         <td class="mono" style="color: var(--text-muted);">#${entry.id}</td>
@@ -2032,6 +2346,7 @@
                             <div style="font-weight: 600; margin-bottom: 4px;">${escapeHtml(entry.description)}</div>
                             ${linesSummary}
                         </td>
+                        <td>${receiptCell}</td>
                         <td class="mono text-right" style="font-weight: 600;">${formatEuro(total)}</td>
                         <td class="text-right">
                             <button class="btn btn-danger-ghost" onclick="handleDeleteEntry(${entry.id})" title="Verwijder boeking">✕</button>
@@ -2043,6 +2358,10 @@
 
         async function handleDeleteEntry(id) {
             if (!confirm(`Weet je zeker dat je boeking #${id} wilt verwijderen?`)) return;
+            const entry = state.entries.find(e => e.id === id);
+            if (entry && entry.receiptId) {
+                await deleteReceiptFromDB(entry.receiptId);
+            }
             await deleteEntryFromDB(id);
             await refreshAllData();
             showToast(`Boeking #${id} verwijderd.`);
@@ -2290,8 +2609,13 @@
             if (e.target === cmdBackdrop) closeCommandPalette();
         });
 
-        // Globale sneltoetsen (Ctrl+K en G-navigatie)
+        // Globale sneltoetsen (Ctrl+K, Escape en G-navigatie)
         document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && viewerBackdrop.classList.contains('open')) {
+                closeReceiptViewer();
+                return;
+            }
+
             if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
                 e.preventDefault();
                 cmdBackdrop.classList.contains('open') ? closeCommandPalette() : openCommandPalette();
@@ -2299,7 +2623,7 @@
             }
 
             const tag = document.activeElement.tagName.toLowerCase();
-            if (tag === 'input' || tag === 'select' || tag === 'textarea' || cmdBackdrop.classList.contains('open')) {
+            if (tag === 'input' || tag === 'select' || tag === 'textarea' || cmdBackdrop.classList.contains('open') || viewerBackdrop.classList.contains('open')) {
                 return;
             }
 

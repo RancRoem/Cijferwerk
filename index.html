@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cijferwerk — Professionele Boekhoudsoftware</title>
     <style>
-        /* === DESIGN TOKENS & DEMO MODUS (STAP 13) === */
+        /* === DESIGN TOKENS & MAKER CREDIT (SER. ROEMER) === */
         :root {
             --bg-app: #f8fafc;
             --bg-surface: #ffffff;
@@ -177,7 +177,7 @@
         }
 
         .sidebar {
-            width: 240px;
+            width: 250px;
             background-color: var(--bg-sidebar);
             color: var(--text-sidebar);
             display: flex;
@@ -269,6 +269,12 @@
             border-top: 1px solid rgba(255, 255, 255, 0.06);
             font-size: 12px;
             color: #94a3b8;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .sidebar-footer-top {
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -1123,6 +1129,24 @@
             border-radius: 6px;
             background: #ffffff;
         }
+
+        .footer-email-btn {
+            display: inline-block;
+            background: rgba(255, 255, 255, 0.1);
+            color: #ffffff;
+            text-decoration: none;
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 500;
+            text-align: center;
+            transition: background 0.15s ease;
+            margin-top: 4px;
+        }
+
+        .footer-email-btn:hover {
+            background: var(--accent);
+        }
     </style>
 </head>
 <body>
@@ -1209,13 +1233,19 @@
             </nav>
 
             <div class="sidebar-footer">
-                <div style="display: flex; flex-direction: column; overflow: hidden;">
-                    <span id="currentUserLabel" style="font-weight: 600; color: #fff; text-overflow: ellipsis; overflow: hidden; white-space: nowrap;">Gebruiker</span>
-                    <span style="font-size: 11px;">Boekjaar 2026</span>
+                <div class="sidebar-footer-top">
+                    <div style="display: flex; flex-direction: column; overflow: hidden;">
+                        <span id="currentUserLabel" style="font-weight: 600; color: #fff; text-overflow: ellipsis; overflow: hidden; white-space: nowrap;">Gebruiker</span>
+                        <span style="font-size: 11px;">Boekjaar 2026</span>
+                    </div>
+                    <div style="display: flex; gap: 4px;">
+                        <button class="btn" id="startTutorialBtn" title="Start Tutorial" style="padding: 3px 6px; font-size: 11px;">?</button>
+                        <button class="btn" id="logoutBtn" title="Uitloggen" style="padding: 3px 8px; font-size: 11px;">Uit</button>
+                    </div>
                 </div>
-                <div style="display: flex; gap: 4px;">
-                    <button class="btn" id="startTutorialBtn" title="Start Tutorial" style="padding: 3px 6px; font-size: 11px;">?</button>
-                    <button class="btn" id="logoutBtn" title="Uitloggen" style="padding: 3px 8px; font-size: 11px;">Uit</button>
+                <div style="border-top: 1px solid rgba(255,255,255,0.06); padding-top: 6px; font-size: 11px; text-align: center; color: #94a3b8;">
+                    Gemaakt door <strong>SER. Roemer</strong>
+                    <a href="mailto:dhr.roemer@gmail.com" class="footer-email-btn">contact mij via mail</a>
                 </div>
             </div>
         </aside>
@@ -1780,6 +1810,7 @@
             <!-- STATUSBAR -->
             <footer class="statusbar">
                 <div><span class="status-dot" id="dbStatusDot"></span><span id="dbStatusText">Database verbinden...</span></div>
+                <div style="font-size: 11px; color: var(--text-muted);">Cijferwerk door SER. Roemer</div>
                 <div id="clockDisplay"></div>
             </footer>
         </div>
@@ -1831,7 +1862,7 @@
     </div>
 
     <script>
-        /* === STAP 13: DEMO MODUS & AUTH === */
+        /* === DEMO MODUS & AUTH === */
         let DB_NAME = 'CijferwerkDB_guest';
         const DB_VERSION = 1;
 
@@ -2265,7 +2296,7 @@
         }
 
         document.getElementById('exportJsonBtn').addEventListener('click', async () => {
-            const archivePayload = { application: 'Cijferwerk', accounts: state.accounts, entries: state.entries };
+            const archivePayload = { application: 'Cijferwerk', creator: 'SER. Roemer', accounts: state.accounts, entries: state.entries };
             const blob = new Blob([JSON.stringify(archivePayload, null, 2)], { type: 'application/json' });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a'); a.href = url; a.download = 'Cijferwerk-Backup.json';

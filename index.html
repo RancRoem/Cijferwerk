@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cijferwerk — Professionele Boekhoudsoftware</title>
     <style>
-        /* === DESIGN TOKENS & AUTH / ADMIN / TUTORIAL (STAP 12) === */
+        /* === DESIGN TOKENS & DEMO MODUS (STAP 13) === */
         :root {
             --bg-app: #f8fafc;
             --bg-surface: #ffffff;
@@ -66,6 +66,31 @@
             user-select: none;
             font-size: 14px;
             line-height: 1.5;
+        }
+
+        /* === DEMO BANNER === */
+        .demo-banner {
+            background-color: var(--accent);
+            color: white;
+            padding: 8px 20px;
+            font-size: 13px;
+            font-weight: 500;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-shrink: 0;
+            z-index: 4000;
+        }
+
+        .demo-banner button {
+            background: white;
+            color: var(--accent);
+            border: none;
+            padding: 3px 10px;
+            border-radius: 4px;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 12px;
         }
 
         /* === AUTH SCREEN === */
@@ -931,7 +956,6 @@
             transform: translateY(0);
         }
 
-        /* === TUTORIAL MODAL === */
         .tutorial-backdrop {
             position: fixed;
             inset: 0;
@@ -968,7 +992,6 @@
             line-height: 1.6;
         }
 
-        /* === MODALS === */
         .modal-backdrop {
             position: fixed;
             inset: 0;
@@ -1109,7 +1132,7 @@
         <div class="auth-card">
             <div class="auth-logo">CW</div>
             <div class="auth-title" id="authTitle">Welkom bij Cijferwerk</div>
-            <div class="auth-sub" id="authSub">Log in om je administratie te openen</div>
+            <div class="auth-sub" id="authSub">Log in of probeer direct de demoversie</div>
 
             <div class="auth-tabs">
                 <div class="auth-tab active" id="tabLoginBtn">Inloggen</div>
@@ -1117,20 +1140,24 @@
             </div>
 
             <form id="authForm">
-                <div class="field-group" style="margin-bottom: 14px;" id="nameFieldGroup" style="display: none;">
+                <div class="field-group" style="margin-bottom: 14px; display: none;" id="nameFieldGroup">
                     <label class="field-label" for="authName">Bedrijfsnaam / Volledige naam</label>
                     <input type="text" class="input" id="authName" placeholder="Bijv. Studio Jansen B.V.">
                 </div>
                 <div class="field-group" style="margin-bottom: 14px;">
                     <label class="field-label" for="authUsername">Gebruikersnaam / E-mail</label>
-                    <input type="text" class="input" id="authUsername" placeholder="Bijv. Admincijfer01 of je e-mail" required>
+                    <input type="text" class="input" id="authUsername" placeholder="Bijv. Admincijfer01 of e-mail" required>
                 </div>
                 <div class="field-group" style="margin-bottom: 20px;">
                     <label class="field-label" for="authPassword">Wachtwoord</label>
                     <input type="password" class="input" id="authPassword" placeholder="••••••••" required>
                 </div>
-                <button type="submit" class="btn btn-primary" id="authSubmitBtn" style="width: 100%; justify-content: center; padding: 10px;">Inloggen</button>
+                <button type="submit" class="btn btn-primary" id="authSubmitBtn" style="width: 100%; justify-content: center; padding: 10px; margin-bottom: 12px;">Inloggen</button>
             </form>
+
+            <div style="border-top: 1px solid var(--border-color); padding-top: 16px; text-align: center;">
+                <button type="button" class="btn" id="startDemoBtn" style="width: 100%; justify-content: center; background: var(--bg-subtle);">Direct de demoversie uitproberen →</button>
+            </div>
         </div>
     </div>
 
@@ -1172,7 +1199,6 @@
                     <span class="nav-shortcut">G A</span>
                 </div>
                 
-                <!-- Admin Only Menu Item -->
                 <div id="adminNavItemContainer" style="display: none;">
                     <div class="nav-label" style="margin-top: 20px;">Beheer</div>
                     <div class="nav-item" data-view="adminportal" style="color: #60a5fa;">
@@ -1196,6 +1222,12 @@
 
         <!-- HOOFDSCHERM -->
         <div class="main-wrapper">
+            <!-- DEMO BANNER ALS ACTIEF -->
+            <div class="demo-banner" id="demoBanner" style="display: none;">
+                <span>🧪 Je bekijkt momenteel de <strong>demoversie</strong> met voorgevulde voorbeelddata.</span>
+                <button type="button" onclick="exitDemoAndRegister()">Eigen account aanmaken →</button>
+            </div>
+
             <header class="topbar">
                 <h1 class="view-title" id="currentViewTitle">Overzicht & Balans</h1>
                 
@@ -1246,7 +1278,6 @@
                         </div>
                     </div>
 
-                    <!-- GRAFIEK & BELASTINGRESERVERING -->
                     <div class="dashboard-analytics-grid">
                         <div class="panel" style="margin-bottom: 0;">
                             <div class="panel-header">
@@ -1800,7 +1831,7 @@
     </div>
 
     <script>
-        /* === STAP 12: AUTH, ADMINPORTAL & TUTORIAL === */
+        /* === STAP 13: DEMO MODUS & AUTH === */
         let DB_NAME = 'CijferwerkDB_guest';
         const DB_VERSION = 1;
 
@@ -1834,7 +1865,8 @@
         const state = {
             db: null,
             currentUser: null,
-            authMode: 'login', // 'login' or 'register'
+            isDemo: false,
+            authMode: 'login',
             accounts: [],
             entries: [],
             receiptsMeta: {},
@@ -1844,35 +1876,18 @@
             currentViewerUrl: null,
             currentView: 'dashboard',
             selectedCmdIndex: 0,
-            lastKeyG: false,
-            lastVatReportText: '',
-            chartMonthlyData: [],
             tutorialStep: 0
         };
 
         const tutorialSteps = [
-            {
-                title: 'Welkom bij Cijferwerk!',
-                text: 'In deze korte rondleiding ontdek je in 3 stappen hoe eenvoudig je jouw complete administratie bijhoudt.'
-            },
-            {
-                title: 'Stap 1: Slim Snelboeken',
-                text: 'Via het journaal kun je in menselijke taal typen (bijv. "Bol.com Kantoorartikelen 36,30 21% pin") en Cijferwerk splitst de boeking automatisch in debet, credit en BTW.'
-            },
-            {
-                title: 'Stap 2: Dashboard & Belasting',
-                text: 'Op het overzicht zie je direct je netto omzet, kosten en resultaat. Ook houdt Cijferwerk automatisch je BTW- en inkomstenbelastingpotje bij!'
-            }
+            { title: 'Welkom bij Cijferwerk!', text: 'In deze korte rondleiding ontdek je in 3 stappen hoe eenvoudig je jouw complete administratie bijhoudt.' },
+            { title: 'Stap 1: Slim Snelboeken', text: 'Typ in menselijke taal in het journaal en Cijferwerk splitst de boeking automatisch in debet, credit en BTW.' },
+            { title: 'Stap 2: Dashboard & Belasting', text: 'Op het overzicht zie je direct je netto omzet, resultaat en automatische belastingreserveringen.' }
         ];
 
         function formatEuro(amount, wholeEuros = false) {
             const val = Math.abs(amount) < 0.005 ? 0 : amount;
-            return new Intl.NumberFormat('nl-NL', {
-                style: 'currency',
-                currency: 'EUR',
-                minimumFractionDigits: wholeEuros ? 0 : 2,
-                maximumFractionDigits: wholeEuros ? 0 : 2
-            }).format(val);
+            return new Intl.NumberFormat('nl-NL', { style: 'currency', currency: 'EUR', minimumFractionDigits: wholeEuros ? 0 : 2, maximumFractionDigits: wholeEuros ? 0 : 2 }).format(val);
         }
 
         function formatFileSize(bytes) {
@@ -1891,37 +1906,16 @@
             return d.toISOString().split('T')[0];
         }
 
-        function daysBetween(isoDateA, isoDateB) {
-            const a = new Date(isoDateA + 'T12:00:00');
-            const b = new Date(isoDateB + 'T12:00:00');
-            return Math.round((b - a) / (1000 * 60 * 60 * 24));
-        }
-
-        // --- AUTHENTICATIE & USERS ---
         function getRegisteredUsers() {
             try {
                 const users = JSON.parse(localStorage.getItem('cijferwerk_users')) || [];
-                // Zorg dat admin er altijd in staat
-                const adminExists = users.some(u => u.username === 'Admincijfer01');
-                if (!adminExists) {
-                    users.push({
-                        id: 'admin_1',
-                        name: 'Sybrenjo (Admin)',
-                        username: 'Admincijfer01',
-                        password: 'ADmin01Cijfer',
-                        role: 'admin'
-                    });
+                if (!users.some(u => u.username === 'Admincijfer01')) {
+                    users.push({ id: 'admin_1', name: 'Sybrenjo (Admin)', username: 'Admincijfer01', password: 'ADmin01Cijfer', role: 'admin' });
                     localStorage.setItem('cijferwerk_users', JSON.stringify(users));
                 }
                 return users;
             } catch (e) {
-                return [{
-                    id: 'admin_1',
-                    name: 'Sybrenjo (Admin)',
-                    username: 'Admincijfer01',
-                    password: 'ADmin01Cijfer',
-                    role: 'admin'
-                }];
+                return [{ id: 'admin_1', name: 'Sybrenjo (Admin)', username: 'Admincijfer01', password: 'ADmin01Cijfer', role: 'admin' }];
             }
         }
 
@@ -1930,11 +1924,12 @@
         }
 
         function initAuth() {
-            // Check of er al een sessie is
             const activeUserJson = sessionStorage.getItem('cijferwerk_active_user');
             if (activeUserJson) {
                 try {
-                    state.currentUser = JSON.parse(activeUserJson);
+                    const sessionData = JSON.parse(activeUserJson);
+                    state.currentUser = sessionData.user;
+                    state.isDemo = sessionData.isDemo || false;
                     startAppSession();
                     return;
                 } catch (e) { }
@@ -1950,23 +1945,55 @@
         function startAppSession() {
             document.getElementById('authScreen').style.display = 'none';
             document.getElementById('appContainer').style.display = 'flex';
-            document.getElementById('currentUserLabel').textContent = `${state.currentUser.name} (${state.currentUser.role === 'admin' ? 'Admin' : 'Lid'})`;
+            document.getElementById('currentUserLabel').textContent = `${state.currentUser.name} (${state.currentUser.role === 'admin' ? 'Admin' : state.isDemo ? 'Demo' : 'Lid'})`;
 
             const adminNav = document.getElementById('adminNavItemContainer');
-            if (state.currentUser.role === 'admin') {
-                adminNav.style.display = 'block';
-            } else {
-                adminNav.style.display = 'none';
-            }
+            adminNav.style.display = (state.currentUser.role === 'admin' && !state.isDemo) ? 'block' : 'none';
 
-            DB_NAME = `CijferwerkDB_${state.currentUser.id}`;
-            initDatabase().then(() => {
-                resetJournalForm();
-                // Check of het een nieuw lid is voor tutorial
-                const tutDone = localStorage.getItem(`cijferwerk_tutorial_${state.currentUser.id}`);
-                if (!tutDone && state.currentUser.role !== 'admin') {
-                    openTutorial();
+            document.getElementById('demoBanner').style.display = state.isDemo ? 'flex' : 'none';
+
+            DB_NAME = state.isDemo ? 'CijferwerkDB_demo' : `CijferwerkDB_${state.currentUser.id}`;
+            initDatabase().then(async () => {
+                if (state.isDemo) {
+                    await seedDemoEntriesIfEmpty();
                 }
+                resetJournalForm();
+            });
+        }
+
+        function seedDemoEntriesIfEmpty() {
+            return new Promise((resolve) => {
+                const tx = state.db.transaction('entries', 'readwrite');
+                const store = tx.objectStore('entries');
+                const countReq = store.count();
+                countReq.onsuccess = async () => {
+                    if (countReq.result === 0) {
+                        const demoEntries = [
+                            {
+                                date: '2026-10-10', dueDate: '2026-10-24', termDays: 14, paid: true,
+                                description: 'Verkoopfactuur #2026-001 — Webontwikkeling Klant A', journalType: 'Verkoop',
+                                lines: [
+                                    { accountCode: '1100', memo: 'Bankontvangst', debit: 1815.00, credit: 0 },
+                                    { accountCode: '8000', memo: 'Consultancy', debit: 0, credit: 1500.00 },
+                                    { accountCode: '1510', memo: 'BTW 21%', debit: 0, credit: 315.00 }
+                                ]
+                            },
+                            {
+                                date: '2026-10-15', dueDate: '2026-10-15', termDays: 0, paid: true,
+                                description: 'Adobe Creative Cloud — Software abonnement', journalType: 'Inkoop',
+                                lines: [
+                                    { accountCode: '4500', memo: 'Licentie', debit: 60.50, credit: 0 },
+                                    { accountCode: '1530', memo: 'Voorbelasting 21%', debit: 12.71, credit: 0 },
+                                    { accountCode: '1100', memo: 'Betaald via pin', debit: 0, credit: 73.21 }
+                                ]
+                            }
+                        ];
+                        for (const ent of demoEntries) {
+                            store.add(ent);
+                        }
+                    }
+                    resolve();
+                };
             });
         }
 
@@ -1976,7 +2003,6 @@
             document.getElementById('tabRegisterBtn').className = 'auth-tab';
             document.getElementById('nameFieldGroup').style.display = 'none';
             document.getElementById('authTitle').textContent = 'Welkom bij Cijferwerk';
-            document.getElementById('authSub').textContent = 'Log in om je administratie te openen';
             document.getElementById('authSubmitBtn').textContent = 'Inloggen';
         });
 
@@ -1986,7 +2012,6 @@
             document.getElementById('tabLoginBtn').className = 'auth-tab';
             document.getElementById('nameFieldGroup').style.display = 'block';
             document.getElementById('authTitle').textContent = 'Nieuw lid aanmelden';
-            document.getElementById('authSub').textContent = 'Maak direct je eigen beveiligde administratie aan';
             document.getElementById('authSubmitBtn').textContent = 'Account aanmaken & Inloggen';
         });
 
@@ -1995,49 +2020,50 @@
             const username = document.getElementById('authUsername').value.trim();
             const password = document.getElementById('authPassword').value.trim();
             const name = document.getElementById('authName').value.trim();
-
             const users = getRegisteredUsers();
 
             if (state.authMode === 'login') {
                 const user = users.find(u => u.username === username && u.password === password);
-                if (!user) {
-                    showToast('Onjuiste gebruikersnaam of wachtwoord.');
-                    return;
-                }
+                if (!user) { showToast('Onjuiste inloggegevens.'); return; }
                 state.currentUser = user;
-                sessionStorage.setItem('cijferwerk_active_user', JSON.stringify(user));
+                state.isDemo = false;
+                sessionStorage.setItem('cijferwerk_active_user', JSON.stringify({ user, isDemo: false }));
                 startAppSession();
                 showToast(`Welkom terug, ${user.name}!`);
             } else {
-                if (!name) {
-                    showToast('Vul alsjeblieft je bedrijfsnaam in.');
-                    return;
-                }
-                if (users.some(u => u.username === username)) {
-                    showToast('Deze gebruikersnaam / e-mail is al in gebruik.');
-                    return;
-                }
-
-                const newUser = {
-                    id: 'user_' + Date.now(),
-                    name,
-                    username,
-                    password,
-                    role: 'member'
-                };
+                if (!name) { showToast('Vul je bedrijfsnaam in.'); return; }
+                if (users.some(u => u.username === username)) { showToast('Gebruikersnaam al in gebruik.'); return; }
+                const newUser = { id: 'user_' + Date.now(), name, username, password, role: 'member' };
                 users.push(newUser);
                 saveRegisteredUsers(users);
-
                 state.currentUser = newUser;
-                sessionStorage.setItem('cijferwerk_active_user', JSON.stringify(newUser));
+                state.isDemo = false;
+                sessionStorage.setItem('cijferwerk_active_user', JSON.stringify({ user: newUser, isDemo: false }));
                 startAppSession();
-                showToast('Account succesvol aangemaakt!');
+                showToast('Account aangemaakt!');
             }
         });
+
+        document.getElementById('startDemoBtn').addEventListener('click', () => {
+            state.currentUser = { id: 'demo_user', name: 'Demo Bezoeker', role: 'member' };
+            state.isDemo = true;
+            sessionStorage.setItem('cijferwerk_active_user', JSON.stringify({ user: state.currentUser, isDemo: true }));
+            startAppSession();
+            showToast('Demo geladen! Je kunt vrij rondkijken.');
+        });
+
+        function exitDemoAndRegister() {
+            sessionStorage.removeItem('cijferwerk_active_user');
+            state.currentUser = null;
+            state.isDemo = false;
+            showAuthScreen();
+            document.getElementById('tabRegisterBtn').click();
+        }
 
         document.getElementById('logoutBtn').addEventListener('click', () => {
             sessionStorage.removeItem('cijferwerk_active_user');
             state.currentUser = null;
+            state.isDemo = false;
             showAuthScreen();
             showToast('Uitgelogd.');
         });
@@ -2051,9 +2077,6 @@
 
         function closeTutorial() {
             document.getElementById('tutorialBackdrop').classList.remove('open');
-            if (state.currentUser) {
-                localStorage.setItem(`cijferwerk_tutorial_${state.currentUser.id}`, 'true');
-            }
         }
 
         function updateTutorialModal() {
@@ -2061,68 +2084,27 @@
             document.getElementById('tutorialTitle').textContent = step.title;
             document.getElementById('tutorialText').textContent = step.text;
             document.getElementById('tutorialStepIndicator').textContent = `Stap ${state.tutorialStep + 1} van ${tutorialSteps.length}`;
-            const nextBtn = document.getElementById('tutorialNextBtn');
-            nextBtn.textContent = state.tutorialStep === tutorialSteps.length - 1 ? 'Starten →' : 'Volgende →';
+            document.getElementById('tutorialNextBtn').textContent = state.tutorialStep === tutorialSteps.length - 1 ? 'Starten →' : 'Volgende →';
         }
 
         document.getElementById('tutorialNextBtn').addEventListener('click', () => {
-            if (state.tutorialStep < tutorialSteps.length - 1) {
-                state.tutorialStep++;
-                updateTutorialModal();
-            } else {
-                closeTutorial();
-            }
+            if (state.tutorialStep < tutorialSteps.length - 1) { state.tutorialStep++; updateTutorialModal(); }
+            else { closeTutorial(); }
         });
 
         document.getElementById('tutorialSkipBtn').addEventListener('click', closeTutorial);
         document.getElementById('startTutorialBtn').addEventListener('click', openTutorial);
 
-        // --- ADMINPORTAL ---
-        function renderAdminPortal() {
-            const tbody = document.getElementById('adminUsersTableBody');
-            const users = getRegisteredUsers();
-
-            tbody.innerHTML = users.map(u => `
-                <tr>
-                    <td class="mono">${escapeHtml(u.id)}</td>
-                    <td style="font-weight: 600;">${escapeHtml(u.name)}</td>
-                    <td class="mono">${escapeHtml(u.username)}</td>
-                    <td><span class="badge ${u.role === 'admin' ? 'badge-activa' : 'badge-opbrengsten'}">${escapeHtml(u.role)}</span></td>
-                    <td class="text-right">
-                        ${u.username !== 'Admincijfer01' ? `<button class="btn btn-sm btn-danger" onclick="deleteUser('${u.id}')">Verwijder</button>` : `<span style="font-size: 11px; color: var(--text-muted);">Systeemadmin</span>`}
-                    </td>
-                </tr>
-            `).join('');
-        }
-
-        function deleteUser(userId) {
-            if (!confirm('Weet je zeker dat je dit lid wilt verwijderen?')) return;
-            let users = getRegisteredUsers();
-            users = users.filter(u => u.id !== userId);
-            saveRegisteredUsers(users);
-            renderAdminPortal();
-            showToast('Gebruiker verwijderd.');
-        }
-
         // --- INDEXEDDB & APP LOGICA ---
         function initDatabase() {
             return new Promise((resolve, reject) => {
                 const request = indexedDB.open(DB_NAME, DB_VERSION);
-
                 request.onupgradeneeded = (e) => {
                     const db = e.target.result;
-                    if (!db.objectStoreNames.contains('accounts')) {
-                        db.createObjectStore('accounts', { keyPath: 'code' });
-                    }
-                    if (!db.objectStoreNames.contains('entries')) {
-                        const entryStore = db.createObjectStore('entries', { keyPath: 'id', autoIncrement: true });
-                        entryStore.createIndex('date', 'date', { unique: false });
-                    }
-                    if (!db.objectStoreNames.contains('receipts')) {
-                        db.createObjectStore('receipts', { keyPath: 'id', autoIncrement: true });
-                    }
+                    if (!db.objectStoreNames.contains('accounts')) db.createObjectStore('accounts', { keyPath: 'code' });
+                    if (!db.objectStoreNames.contains('entries')) db.createObjectStore('entries', { keyPath: 'id', autoIncrement: true });
+                    if (!db.objectStoreNames.contains('receipts')) db.createObjectStore('receipts', { keyPath: 'id', autoIncrement: true });
                 };
-
                 request.onsuccess = async (e) => {
                     state.db = e.target.result;
                     await seedDefaultAccountsIfEmpty();
@@ -2130,12 +2112,7 @@
                     updateDbStatus(true);
                     resolve();
                 };
-
-                request.onerror = (e) => {
-                    console.error('IndexedDB fout:', e.target.error);
-                    updateDbStatus(false);
-                    reject(e.target.error);
-                };
+                request.onerror = (e) => reject(e.target.error);
             });
         }
 
@@ -2144,11 +2121,8 @@
                 const tx = state.db.transaction('accounts', 'readwrite');
                 const store = tx.objectStore('accounts');
                 const countReq = store.count();
-
                 countReq.onsuccess = () => {
-                    if (countReq.result === 0) {
-                        DEFAULT_ACCOUNTS.forEach(acc => store.put(acc));
-                    }
+                    if (countReq.result === 0) DEFAULT_ACCOUNTS.forEach(acc => store.put(acc));
                 };
                 tx.oncomplete = () => resolve();
             });
@@ -2165,7 +2139,7 @@
             renderVatReturn();
             renderOpenItems();
             renderBackupStats();
-            if (state.currentUser && state.currentUser.role === 'admin') {
+            if (state.currentUser && state.currentUser.role === 'admin' && !state.isDemo) {
                 renderAdminPortal();
             }
             updateDbStatus(true);
@@ -2174,9 +2148,8 @@
         function loadAccountsFromDB() {
             return new Promise((resolve) => {
                 const tx = state.db.transaction('accounts', 'readonly');
-                const req = tx.objectStore('accounts').getAll();
-                req.onsuccess = () => {
-                    state.accounts = req.result.sort((a, b) => a.code.localeCompare(b.code));
+                tx.objectStore('accounts').getAll().onsuccess = (e) => {
+                    state.accounts = e.target.result.sort((a, b) => a.code.localeCompare(b.code));
                     resolve();
                 };
             });
@@ -2185,9 +2158,8 @@
         function loadEntriesFromDB() {
             return new Promise((resolve) => {
                 const tx = state.db.transaction('entries', 'readonly');
-                const req = tx.objectStore('entries').getAll();
-                req.onsuccess = () => {
-                    state.entries = req.result.sort((a, b) => b.date.localeCompare(a.date) || b.id - b.id);
+                tx.objectStore('entries').getAll().onsuccess = (e) => {
+                    state.entries = e.target.result.sort((a, b) => b.date.localeCompare(a.date) || b.id - a.id);
                     resolve();
                 };
             });
@@ -2196,47 +2168,26 @@
         function loadReceiptsMetaFromDB() {
             return new Promise((resolve) => {
                 const tx = state.db.transaction('receipts', 'readonly');
-                const req = tx.objectStore('receipts').getAll();
-                req.onsuccess = () => {
+                tx.objectStore('receipts').getAll().onsuccess = (e) => {
                     const map = {};
-                    req.result.forEach(r => {
-                        map[r.id] = { id: r.id, name: r.name, type: r.type, size: r.size };
-                    });
+                    e.target.result.forEach(r => { map[r.id] = { id: r.id, name: r.name, type: r.type, size: r.size }; });
                     state.receiptsMeta = map;
                     resolve();
                 };
             });
         }
 
-        function getAllReceiptsFullFromDB() {
-            return new Promise((resolve) => {
-                const tx = state.db.transaction('receipts', 'readonly');
-                const req = tx.objectStore('receipts').getAll();
-                req.onsuccess = () => resolve(req.result);
-            });
-        }
-
         function saveReceiptToDB(file) {
-            return new Promise((resolve, reject) => {
+            return new Promise((resolve) => {
                 const tx = state.db.transaction('receipts', 'readwrite');
-                const req = tx.objectStore('receipts').add({
-                    name: file.name,
-                    type: file.type,
-                    size: file.size,
-                    blob: file,
-                    uploadedAt: new Date().toISOString()
-                });
-                req.onsuccess = () => resolve(req.result);
-                req.onerror = () => reject(new Error('Fout bij opslaan van bijlage.'));
+                const req = tx.objectStore('receipts').add({ name: file.name, type: file.type, size: file.size, blob: file, uploadedAt: new Date().toISOString() });
+                req.onsuccess = (e) => resolve(e.target.result);
             });
         }
 
         function getReceiptFromDB(receiptId) {
-            return new Promise((resolve, reject) => {
-                const tx = state.db.transaction('receipts', 'readonly');
-                const req = tx.objectStore('receipts').get(receiptId);
-                req.onsuccess = () => resolve(req.result);
-                req.onerror = () => reject(new Error('Bijlage niet gevonden.'));
+            return new Promise((resolve) => {
+                state.db.transaction('receipts', 'readonly').objectStore('receipts').get(receiptId).onsuccess = (e) => resolve(e.target.result);
             });
         }
 
@@ -2259,53 +2210,46 @@
         }
 
         function saveEntryToDB(entry) {
-            return new Promise((resolve, reject) => {
+            return new Promise((resolve) => {
                 const tx = state.db.transaction('entries', 'readwrite');
-                const req = tx.objectStore('entries').add(entry);
-                req.onsuccess = () => resolve(req.result);
-                req.onerror = () => reject(new Error('Fout bij opslaan van boeking.'));
+                tx.objectStore('entries').add(entry).onsuccess = (e) => resolve(e.target.result);
             });
         }
 
         function updateEntryInDB(entry) {
-            return new Promise((resolve, reject) => {
+            return new Promise((resolve) => {
                 const tx = state.db.transaction('entries', 'readwrite');
-                const req = tx.objectStore('entries').put(entry);
-                req.onsuccess = () => resolve();
-                req.onerror = () => reject(new Error('Fout bij bijwerken van boeking.'));
+                tx.objectStore('entries').put(entry);
+                tx.oncomplete = () => resolve();
             });
         }
 
         function deleteEntryFromDB(id) {
-            return new Promise((resolve, reject) => {
+            return new Promise((resolve) => {
                 const tx = state.db.transaction('entries', 'readwrite');
-                const req = tx.objectStore('entries').delete(id);
-                req.onsuccess = () => resolve();
-                req.onerror = () => reject(new Error('Fout bij verwijderen.'));
+                tx.objectStore('entries').delete(id);
+                tx.oncomplete = () => resolve();
             });
         }
 
         function recalculateBalances() {
             const balances = {};
             state.accounts.forEach(a => { balances[a.code] = 0; });
-
             state.entries.forEach(entry => {
                 entry.lines.forEach(line => {
                     if (balances[line.accountCode] === undefined) balances[line.accountCode] = 0;
                     balances[line.accountCode] = roundCents(balances[line.accountCode] + (line.debit - line.credit));
                 });
             });
-
             state.accountBalances = balances;
         }
 
         function updateDbStatus(isConnected) {
             const dot = document.getElementById('dbStatusDot');
             const text = document.getElementById('dbStatusText');
-            const receiptCount = Object.keys(state.receiptsMeta).length;
             if (isConnected) {
                 dot.classList.add('online');
-                text.textContent = `Database verbonden — ${state.entries.length} boekingen, ${receiptCount} bijlagen, ${state.accounts.length} rekeningen`;
+                text.textContent = `Database verbonden — ${state.entries.length} boekingen`;
             } else {
                 dot.classList.remove('online');
                 text.textContent = 'Database fout';
@@ -2315,155 +2259,26 @@
         /* === BACK-UP & EXPORT === */
         function renderBackupStats() {
             const receipts = Object.values(state.receiptsMeta);
-            const totalSize = receipts.reduce((s, r) => s + (r.size || 0), 0);
             document.getElementById('backupEntryCount').textContent = state.entries.length;
             document.getElementById('backupReceiptCount').textContent = receipts.length;
-            document.getElementById('backupReceiptSizeSub').textContent = `Totale opslag: ${formatFileSize(totalSize)}`;
             document.getElementById('backupAccountCount').textContent = state.accounts.length;
         }
 
-        function blobToBase64(blob) {
-            return new Promise((resolve, reject) => {
-                const reader = new FileReader();
-                reader.onloadend = () => resolve(reader.result);
-                reader.onerror = reject;
-                reader.readAsDataURL(blob);
-            });
-        }
-
-        async function dataUrlToBlob(dataUrl) {
-            const res = await fetch(dataUrl);
-            return await res.blob();
-        }
-
-        function triggerFileDownload(blob, filename) {
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = filename;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            setTimeout(() => URL.revokeObjectURL(url), 1000);
-        }
-
         document.getElementById('exportJsonBtn').addEventListener('click', async () => {
-            try {
-                showToast('Back-up samenstellen...');
-                const fullReceipts = await getAllReceiptsFullFromDB();
-                const serializedReceipts = [];
-
-                for (const r of fullReceipts) {
-                    const dataUrl = r.blob ? await blobToBase64(r.blob) : null;
-                    serializedReceipts.push({
-                        id: r.id,
-                        name: r.name,
-                        type: r.type,
-                        size: r.size,
-                        uploadedAt: r.uploadedAt,
-                        dataUrl
-                    });
-                }
-
-                const archivePayload = {
-                    application: 'Cijferwerk',
-                    schemaVersion: 1,
-                    exportedAt: new Date().toISOString(),
-                    accounts: state.accounts,
-                    entries: state.entries,
-                    receipts: serializedReceipts
-                };
-
-                const blob = new Blob([JSON.stringify(archivePayload, null, 2)], { type: 'application/json' });
-                const today = new Date().toISOString().split('T')[0];
-                triggerFileDownload(blob, `Cijferwerk-Backup-${today}.json`);
-                showToast('Volledige JSON-back-up gedownload.');
-            } catch (err) {
-                console.error(err);
-                showToast('Fout bij exporteren van back-up.');
-            }
-        });
-
-        const importJsonInput = document.getElementById('importJsonInput');
-        document.getElementById('importJsonBtn').addEventListener('click', () => importJsonInput.click());
-
-        importJsonInput.addEventListener('change', async (e) => {
-            const file = e.target.files && e.target.files[0];
-            if (!file) return;
-
-            try {
-                const text = await file.text();
-                const data = JSON.parse(text);
-                if (data.application !== 'Cijferwerk' || !Array.isArray(data.accounts)) {
-                    showToast('Ongeldig back-upbestand.');
-                    importJsonInput.value = '';
-                    return;
-                }
-
-                if (!confirm('Weet je zeker dat je deze back-up wilt terugzetten? Huidige gegevens worden overschreven.')) {
-                    importJsonInput.value = '';
-                    return;
-                }
-
-                const restoredReceipts = [];
-                for (const r of (data.receipts || [])) {
-                    if (r.dataUrl) {
-                        const blob = await dataUrlToBlob(r.dataUrl);
-                        restoredReceipts.push({ ...r, blob });
-                    }
-                }
-
-                await new Promise((resolve) => {
-                    const tx = state.db.transaction(['accounts', 'entries', 'receipts'], 'readwrite');
-                    tx.objectStore('accounts').clear();
-                    tx.objectStore('entries').clear();
-                    tx.objectStore('receipts').clear();
-                    data.accounts.forEach(acc => tx.objectStore('accounts').put(acc));
-                    data.entries.forEach(ent => tx.objectStore('entries').put(ent));
-                    restoredReceipts.forEach(rec => tx.objectStore('receipts').put(rec));
-                    tx.oncomplete = () => resolve();
-                });
-
-                importJsonInput.value = '';
-                await refreshAllData();
-                showToast('Back-up succesvol hersteld.');
-            } catch (err) {
-                showToast('Kon back-upbestand niet lezen.');
-                importJsonInput.value = '';
-            }
-        });
-
-        document.getElementById('exportCsvBtn').addEventListener('click', () => {
-            if (state.entries.length === 0) {
-                showToast('Geen boekingen beschikbaar.');
-                return;
-            }
-            const rows = [['Boekingsnummer', 'Datum', 'Vervaldatum', 'Dagboek', 'Omschrijving', 'Rekeningnummer', 'Rekeningnaam', 'Regelomschrijving', 'Debet', 'Credit', 'Status']];
-            state.entries.forEach(entry => {
-                entry.lines.forEach(line => {
-                    rows.push([
-                        entry.id, entry.date, entry.dueDate || '', entry.journalType, entry.description,
-                        line.accountCode, getAccountName(line.accountCode), line.memo || '',
-                        line.debit.toFixed(2).replace('.', ','), line.credit.toFixed(2).replace('.', ','),
-                        entry.paid ? 'Voldaan' : 'Openstaand'
-                    ]);
-                });
-            });
-            const csvContent = '\uFEFF' + rows.map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(';')).join('\r\n');
-            triggerFileDownload(new Blob([csvContent], { type: 'text/csv;charset=utf-8;' }), `Cijferwerk-Journaal.csv`);
-            showToast('CSV geëxporteerd.');
+            const archivePayload = { application: 'Cijferwerk', accounts: state.accounts, entries: state.entries };
+            const blob = new Blob([JSON.stringify(archivePayload, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a'); a.href = url; a.download = 'Cijferwerk-Backup.json';
+            a.click();
+            showToast('Back-up gedownload.');
         });
 
         document.getElementById('clearDemoDataBtn').addEventListener('click', async () => {
             if (!confirm('Weet je zeker dat je alle boekingen wilt wissen?')) return;
-            await new Promise((resolve) => {
-                const tx = state.db.transaction(['entries', 'receipts'], 'readwrite');
-                tx.objectStore('entries').clear();
-                tx.objectStore('receipts').clear();
-                tx.oncomplete = () => resolve();
-            });
-            await refreshAllData();
-            showToast('Alle boekingen gewist.');
+            const tx = state.db.transaction(['entries', 'receipts'], 'readwrite');
+            tx.objectStore('entries').clear();
+            tx.objectStore('receipts').clear();
+            tx.oncomplete = async () => { await refreshAllData(); showToast('Gewist.'); };
         });
 
         /* === GRAFIEK === */
@@ -2477,7 +2292,6 @@
                 if (yearFilter !== 'ALL' && y !== yearFilter) return;
                 const monthIdx = parseInt(m, 10) - 1;
                 if (monthIdx < 0 || monthIdx > 11) return;
-
                 entry.lines.forEach(line => {
                     const acc = state.accounts.find(a => a.code === line.accountCode);
                     if (!acc) return;
@@ -2496,104 +2310,40 @@
             const rect = canvas.getBoundingClientRect();
             if (rect.width === 0 || rect.height === 0) return;
 
-            const dpr = window.devicePixelRatio || 1;
-            canvas.width = rect.width * dpr;
-            canvas.height = rect.height * dpr;
+            canvas.width = rect.width * (window.devicePixelRatio || 1);
+            canvas.height = rect.height * (window.devicePixelRatio || 1);
             const ctx = canvas.getContext('2d');
-            ctx.scale(dpr, dpr);
+            ctx.scale(window.devicePixelRatio || 1, window.devicePixelRatio || 1);
 
-            const w = rect.width, h = rect.height;
-            const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-            const textColor = isDark ? '#94a3b8' : '#64748b';
-            const gridColor = isDark ? '#334155' : '#e2e8f0';
-
-            ctx.clearRect(0, 0, w, h);
+            ctx.clearRect(0, 0, rect.width, rect.height);
             const data = state.chartMonthlyData;
-            const padLeft = 62, padRight = 16, padTop = 16, padBottom = 30;
-            const plotW = w - padLeft - padRight, plotH = h - padTop - padBottom;
+            const padL = 50, padR = 10, padT = 10, padB = 25;
+            const plotW = rect.width - padL - padR, plotH = rect.height - padT - padB;
 
-            let maxVal = 100, minVal = 0;
-            data.forEach(d => {
-                maxVal = Math.max(maxVal, d.revenue, d.expenses, d.profit);
-                minVal = Math.min(minVal, d.profit, 0);
-            });
-            maxVal = Math.ceil((maxVal * 1.15) / 100) * 100;
-            const range = maxVal - minVal || 100;
-            const yForVal = (val) => padTop + plotH - ((val - minVal) / range) * plotH;
-            const zeroY = yForVal(0);
-
-            ctx.font = '11px sans-serif';
-            ctx.textAlign = 'right';
-            ctx.textBaseline = 'middle';
-
-            for (let i = 0; i <= 4; i++) {
-                const val = minVal + (range / 4) * i;
-                const y = yForVal(val);
-                ctx.strokeStyle = gridColor;
-                ctx.beginPath();
-                ctx.moveTo(padLeft, y);
-                ctx.lineTo(w - padRight, y);
-                ctx.stroke();
-                ctx.fillStyle = textColor;
-                ctx.fillText(`€ ${Math.round(val)}`, padLeft - 8, y);
-            }
+            let maxV = 100;
+            data.forEach(d => { maxV = Math.max(maxV, d.revenue, d.expenses); });
+            maxV = Math.ceil((maxV * 1.15) / 100) * 100;
 
             const colW = plotW / 12;
-            const barW = Math.min(16, colW * 0.28);
-            const profitPoints = [];
-
             data.forEach((d, i) => {
-                const centerX = padLeft + colW * i + colW / 2;
+                const cx = padL + colW * i + colW / 2;
                 if (d.revenue > 0) {
                     ctx.fillStyle = '#059669';
-                    ctx.fillRect(centerX - barW - 2, yForVal(d.revenue), barW, zeroY - yForVal(d.revenue));
+                    const h = (d.revenue / maxV) * plotH;
+                    ctx.fillRect(cx - 8, padT + plotH - h, 6, h);
                 }
                 if (d.expenses > 0) {
                     ctx.fillStyle = '#dc2626';
-                    ctx.fillRect(centerX + 2, yForVal(d.expenses), barW, zeroY - yForVal(d.expenses));
+                    const h = (d.expenses / maxV) * plotH;
+                    ctx.fillRect(cx + 2, padT + plotH - h, 6, h);
                 }
-                profitPoints.push({ x: centerX, y: yForVal(d.profit) });
-                ctx.fillStyle = textColor;
+                ctx.fillStyle = '#64748b';
+                ctx.font = '10px sans-serif';
                 ctx.textAlign = 'center';
-                ctx.textBaseline = 'top';
-                ctx.fillText(d.label, centerX, h - padBottom + 8);
+                ctx.fillText(d.label, cx, rect.height - 8);
             });
-
-            ctx.strokeStyle = isDark ? '#60a5fa' : '#2563eb';
-            ctx.lineWidth = 2.2;
-            ctx.beginPath();
-            profitPoints.forEach((pt, idx) => {
-                if (idx === 0) ctx.moveTo(pt.x, pt.y);
-                else ctx.lineTo(pt.x, pt.y);
-            });
-            ctx.stroke();
         }
 
-        const pnlCanvas = document.getElementById('pnlCanvas');
-        const chartTooltip = document.getElementById('chartTooltip');
-
-        pnlCanvas.addEventListener('mousemove', (e) => {
-            const rect = pnlCanvas.getBoundingClientRect();
-            const relX = e.clientX - rect.left;
-            const padLeft = 62, padRight = 16, plotW = rect.width - padLeft - padRight;
-            if (relX < padLeft || relX > rect.width - padRight || state.chartMonthlyData.length === 0) {
-                chartTooltip.style.opacity = '0';
-                return;
-            }
-            const idx = Math.min(11, Math.max(0, Math.floor(((relX - padLeft) / plotW) * 12)));
-            const d = state.chartMonthlyData[idx];
-            chartTooltip.innerHTML = `
-                <div style="font-weight: 700; margin-bottom: 4px;">${d.label}</div>
-                <div>Omzet: <span style="color: #34d399;">${formatEuro(d.revenue)}</span></div>
-                <div>Kosten: <span style="color: #f87171;">${formatEuro(d.expenses)}</span></div>
-                <div>Resultaat: <span style="color: #93c5fd; font-weight: 700;">${formatEuro(d.profit)}</span></div>
-            `;
-            chartTooltip.style.left = `${Math.min(rect.width - 170, Math.max(10, relX + 12))}px`;
-            chartTooltip.style.top = `14px`;
-            chartTooltip.style.opacity = '1';
-        });
-
-        pnlCanvas.addEventListener('mouseleave', () => { chartTooltip.style.opacity = '0'; });
         document.getElementById('dashboardYearSelect').addEventListener('change', renderDashboard);
 
         /* === BONNETJES === */
@@ -2605,7 +2355,7 @@
             if (!file) {
                 state.draftReceiptFile = null;
                 document.getElementById('receiptIconBox').textContent = 'BON';
-                document.getElementById('receiptFileLabel').textContent = 'Sleep een bon of PDF hierheen, of klik om te kiezen';
+                document.getElementById('receiptFileLabel').textContent = 'Sleep een bon of PDF hierheen';
                 clearReceiptBtn.style.display = 'none';
                 fileInput.value = '';
                 return;
@@ -2636,20 +2386,12 @@
             viewerBackdrop.classList.add('open');
         }
 
-        function closeReceiptViewer() {
-            viewerBackdrop.classList.remove('open');
-            viewerBody.innerHTML = '';
-            if (state.currentViewerUrl) { URL.revokeObjectURL(state.currentViewerUrl); state.currentViewerUrl = null; }
-        }
-
-        document.getElementById('closeViewerBtn').addEventListener('click', closeReceiptViewer);
+        document.getElementById('closeViewerBtn').addEventListener('click', () => { viewerBackdrop.classList.remove('open'); viewerBody.innerHTML = ''; });
 
         /* === DEBITEUREN & CREDITEUREN === */
         function renderOpenItems() {
             const showPaid = document.getElementById('showPaidInvoices').checked;
-            const todayStr = new Date().toISOString().split('T')[0];
             const debtors = [], creditors = [];
-
             state.entries.forEach(entry => {
                 const dueDate = entry.dueDate || addDaysToDate(entry.date, entry.termDays || 14);
                 entry.lines.forEach(line => {
@@ -2662,32 +2404,14 @@
             document.getElementById('openCreditorsTotal').textContent = formatEuro(roundCents(creditors.filter(c => !c.isPaid).reduce((s, c) => s + c.amount, 0)));
             document.getElementById('bankBalanceTotal').textContent = formatEuro(roundCents(state.accountBalances['1100'] || 0));
 
-            const debBody = document.getElementById('debtorsTableBody');
             const visDeb = showPaid ? debtors : debtors.filter(d => !d.isPaid);
-            debBody.innerHTML = visDeb.length === 0 ? `<tr><td colspan="7" style="text-align: center; color: var(--text-muted); padding: 24px;">Geen openstaande debiteuren.</td></tr>` : visDeb.map(item => `
-                <tr>
-                    <td class="mono">#${item.entryId}</td>
-                    <td class="mono">${item.date}</td>
-                    <td class="mono">${item.dueDate}</td>
-                    <td>${escapeHtml(item.description)}</td>
-                    <td>${item.isPaid ? '<span class="badge badge-opbrengsten">Voldaan</span>' : '<span class="badge badge-activa">Open</span>'}</td>
-                    <td class="mono text-right" style="font-weight: 600;">${formatEuro(item.amount)}</td>
-                    <td class="text-right">${item.isPaid ? '—' : `<button class="btn btn-sm btn-success" onclick="settleOpenItem(${item.entryId}, '1300')">Markeer betaald</button>`}</td>
-                </tr>
+            document.getElementById('debtorsTableBody').innerHTML = visDeb.length === 0 ? `<tr><td colspan="7" style="text-align: center; color: var(--text-muted); padding: 24px;">Geen openstaande debiteuren.</td></tr>` : visDeb.map(item => `
+                <tr><td class="mono">#${item.entryId}</td><td class="mono">${item.date}</td><td class="mono">${item.dueDate}</td><td>${escapeHtml(item.description)}</td><td>${item.isPaid ? '<span class="badge badge-opbrengsten">Voldaan</span>' : '<span class="badge badge-activa">Open</span>'}</td><td class="mono text-right" style="font-weight: 600;">${formatEuro(item.amount)}</td><td class="text-right">${item.isPaid ? '—' : `<button class="btn btn-sm btn-success" onclick="settleOpenItem(${item.entryId}, '1300')">Markeer betaald</button>`}</td></tr>
             `).join('');
 
-            const credBody = document.getElementById('creditorsTableBody');
             const visCred = showPaid ? creditors : creditors.filter(c => !c.isPaid);
-            credBody.innerHTML = visCred.length === 0 ? `<tr><td colspan="7" style="text-align: center; color: var(--text-muted); padding: 24px;">Geen openstaande crediteuren.</td></tr>` : visCred.map(item => `
-                <tr>
-                    <td class="mono">#${item.entryId}</td>
-                    <td class="mono">${item.date}</td>
-                    <td class="mono">${item.dueDate}</td>
-                    <td>${escapeHtml(item.description)}</td>
-                    <td>${item.isPaid ? '<span class="badge badge-opbrengsten">Voldaan</span>' : '<span class="badge badge-activa">Open</span>'}</td>
-                    <td class="mono text-right" style="font-weight: 600;">${formatEuro(item.amount)}</td>
-                    <td class="text-right">${item.isPaid ? '—' : `<button class="btn btn-sm btn-primary" onclick="settleOpenItem(${item.entryId}, '1600')">Betaal via bank</button>`}</td>
-                </tr>
+            document.getElementById('creditorsTableBody').innerHTML = visCred.length === 0 ? `<tr><td colspan="7" style="text-align: center; color: var(--text-muted); padding: 24px;">Geen openstaande crediteuren.</td></tr>` : visCred.map(item => `
+                <tr><td class="mono">#${item.entryId}</td><td class="mono">${item.date}</td><td class="mono">${item.dueDate}</td><td>${escapeHtml(item.description)}</td><td>${item.isPaid ? '<span class="badge badge-opbrengsten">Voldaan</span>' : '<span class="badge badge-activa">Open</span>'}</td><td class="mono text-right" style="font-weight: 600;">${formatEuro(item.amount)}</td><td class="text-right">${item.isPaid ? '—' : `<button class="btn btn-sm btn-primary" onclick="settleOpenItem(${item.entryId}, '1600')">Betaal via bank</button>`}</td></tr>
             `).join('');
         }
 
@@ -2707,14 +2431,11 @@
                 { accountCode: '1100', memo: `Betaling #${entry.id}`, debit: 0, credit: amount }
             ];
 
-            await saveEntryToDB({
-                date: todayStr, description: `${isDebtor ? 'Ontvangst' : 'Betaling'}: ${entry.description}`,
-                journalType: 'Bank', lines: bankLines, createdAt: new Date().toISOString()
-            });
+            await saveEntryToDB({ date: todayStr, description: `${isDebtor ? 'Ontvangst' : 'Betaling'}: ${entry.description}`, journalType: 'Bank', lines: bankLines, createdAt: new Date().toISOString() });
             entry.paid = true;
             await updateEntryInDB(entry);
             await refreshAllData();
-            showToast('Post afgeletterd op Bank.');
+            showToast('Post afgeletterd.');
         }
 
         document.getElementById('showPaidInvoices').addEventListener('change', renderOpenItems);
@@ -2735,42 +2456,30 @@
             const useBdRounding = document.getElementById('vatRoundBelastingdienst').checked;
             const filtered = state.entries.filter(e => entryMatchesQuarter(e.date, quarter));
 
-            let base21 = 0, base9 = 0, base0 = 0, vat21 = 0, vat9 = 0, vatInput = 0;
+            let base21 = 0, vat21 = 0, vatInput = 0;
             filtered.forEach(entry => {
                 entry.lines.forEach(line => {
                     const acc = state.accounts.find(a => a.code === line.accountCode);
                     const netCredit = roundCents(line.credit - line.debit);
                     const netDebit = roundCents(line.debit - line.credit);
                     if (line.accountCode === '1510') vat21 = roundCents(vat21 + netCredit);
-                    else if (line.accountCode === '1520') vat9 = roundCents(vat9 + netCredit);
                     else if (line.accountCode === '1530') vatInput = roundCents(vatInput + netDebit);
-                    else if (acc && acc.category === 'Opbrengsten') {
-                        if (acc.defaultVat === '21') base21 = roundCents(base21 + netCredit);
-                        else if (acc.defaultVat === '9') base9 = roundCents(base9 + netCredit);
-                        else base0 = roundCents(base0 + netCredit);
-                    }
+                    else if (acc && acc.category === 'Opbrengsten' && acc.defaultVat === '21') base21 = roundCents(base21 + netCredit);
                 });
             });
 
-            const dispB21 = useBdRounding ? Math.floor(base21) : base21;
-            const dispV21 = useBdRounding ? Math.floor(vat21) : vat21;
-            const dispB9 = useBdRounding ? Math.floor(base9) : base9;
-            const dispV9 = useBdRounding ? Math.floor(vat9) : vat9;
-            const dispB0 = useBdRounding ? Math.floor(base0) : base0;
-            const total5a = roundCents(dispV21 + dispV9);
+            const total5a = useBdRounding ? Math.floor(vat21) : vat21;
             const disp5b = useBdRounding ? Math.ceil(vatInput) : vatInput;
             const total5g = roundCents(total5a - disp5b);
 
-            document.getElementById('vatCardBase').textContent = formatEuro(dispB21 + dispB9 + dispB0, useBdRounding);
+            document.getElementById('vatCardBase').textContent = formatEuro(base21, useBdRounding);
             document.getElementById('vatCard5a').textContent = formatEuro(total5a, useBdRounding);
             document.getElementById('vatCard5b').textContent = formatEuro(disp5b, useBdRounding);
             document.getElementById('vatCard5g').textContent = formatEuro(Math.abs(total5g), useBdRounding);
 
             document.getElementById('vatReturnTableBody').innerHTML = `
                 <tr class="vat-section-row"><td colspan="4">Rubriek 1: Prestaties binnenland</td></tr>
-                <tr><td class="mono">1a</td><td>Hoog tarief (21%)</td><td class="mono text-right">${formatEuro(dispB21, useBdRounding)}</td><td class="mono text-right">${formatEuro(dispV21, useBdRounding)}</td></tr>
-                <tr><td class="mono">1b</td><td>Laag tarief (9%)</td><td class="mono text-right">${formatEuro(dispB9, useBdRounding)}</td><td class="mono text-right">${formatEuro(dispV9, useBdRounding)}</td></tr>
-                <tr><td class="mono">1e</td><td>0% of vrijgesteld</td><td class="mono text-right">${formatEuro(dispB0, useBdRounding)}</td><td class="mono text-right">—</td></tr>
+                <tr><td class="mono">1a</td><td>Hoog tarief (21%)</td><td class="mono text-right">${formatEuro(base21, useBdRounding)}</td><td class="mono text-right">${formatEuro(vat21, useBdRounding)}</td></tr>
                 <tr class="vat-section-row"><td colspan="4">Rubriek 5: Totaal</td></tr>
                 <tr><td class="mono">5a</td><td>Verschuldigde BTW</td><td class="mono text-right">—</td><td class="mono text-right">${formatEuro(total5a, useBdRounding)}</td></tr>
                 <tr><td class="mono">5b</td><td>Voorbelasting</td><td class="mono text-right">—</td><td class="mono text-right">${formatEuro(disp5b, useBdRounding)}</td></tr>
@@ -2794,10 +2503,6 @@
                 remaining = remaining.replace(dateMatch[0], ' ');
             }
 
-            let vatRate = 21;
-            const vatMatch = remaining.match(/\b(21|9|0)\s*%/);
-            if (vatMatch) { vatRate = parseInt(vatMatch[1], 10); remaining = remaining.replace(vatMatch[0], ' '); }
-
             let grossAmount = 0;
             const amountMatch = remaining.match(/(?:€\s*)?(\d+(?:[.,]\d{1,2})?)/);
             if (amountMatch) grossAmount = parseFloat(amountMatch[1].replace(',', '.'));
@@ -2805,23 +2510,18 @@
 
             const isIncome = /\b(factuur|verkoop|omzet|klant)\b/i.test(lower);
             const isDirectBank = /\b(pin|ideal|betaald)\b/i.test(lower);
-            let targetAccount = isIncome ? '8000' : '4300';
-
-            const netAmount = roundCents(grossAmount / (1 + vatRate / 100));
+            const netAmount = roundCents(grossAmount / 1.21);
             const vatAmount = roundCents(grossAmount - netAmount);
-            const lines = [];
 
-            if (isIncome) {
-                const contraAcc = isDirectBank ? '1100' : '1300';
-                lines.push({ accountCode: contraAcc, memo: remaining.trim(), debit: grossAmount, credit: 0 });
-                lines.push({ accountCode: targetAccount, memo: remaining.trim(), debit: 0, credit: netAmount });
-                if (vatAmount > 0) lines.push({ accountCode: vatRate === 9 ? '1520' : '1510', memo: `BTW ${vatRate}%`, debit: 0, credit: vatAmount });
-            } else {
-                const contraAcc = isDirectBank ? '1100' : '1600';
-                lines.push({ accountCode: targetAccount, memo: remaining.trim(), debit: netAmount, credit: 0 });
-                if (vatAmount > 0) lines.push({ accountCode: '1530', memo: `Voorbelasting`, debit: vatAmount, credit: 0 });
-                lines.push({ accountCode: contraAcc, memo: remaining.trim(), debit: 0, credit: grossAmount });
-            }
+            const lines = isIncome ? [
+                { accountCode: isDirectBank ? '1100' : '1300', memo: remaining.trim(), debit: grossAmount, credit: 0 },
+                { accountCode: '8000', memo: remaining.trim(), debit: 0, credit: netAmount },
+                { accountCode: '1510', memo: 'BTW 21%', debit: 0, credit: vatAmount }
+            ] : [
+                { accountCode: '4300', memo: remaining.trim(), debit: netAmount, credit: 0 },
+                { accountCode: '1530', memo: 'Voorbelasting', debit: vatAmount, credit: 0 },
+                { accountCode: isDirectBank ? '1100' : '1600', memo: remaining.trim(), debit: 0, credit: grossAmount }
+            ];
 
             return { date: parsedDate, description: remaining.trim() || 'Boeking', journalType: isIncome ? 'Verkoop' : 'Inkoop', termDays: isDirectBank ? 0 : 14, lines };
         }
@@ -2901,8 +2601,6 @@
         });
 
         /* === TABELLEN & RENDERING === */
-        function getAccountName(code) { const f = state.accounts.find(a => a.code === code); return f ? f.name : code; }
-
         function renderEntriesTable() {
             const tbody = document.getElementById('entriesTableBody');
             document.getElementById('entryCountLabel').textContent = state.entries.length;
@@ -2964,7 +2662,7 @@
 
             const netProfit = roundCents(revenue - expenses);
             const bankBal = roundCents(state.accountBalances['1100'] || 0);
-            const vatPayable = roundCents(-(state.accountBalances['1510'] || 0) - (state.accountBalances['1520'] || 0));
+            const vatPayable = roundCents(-(state.accountBalances['1510'] || 0));
             const vatReserve = Math.max(0, roundCents(vatPayable - (state.accountBalances['1530'] || 0)));
             const incomeTaxReserve = netProfit > 0 ? roundCents(netProfit * 0.37) : 0;
             const freeSpendable = roundCents(bankBal - vatReserve - incomeTaxReserve);
@@ -2996,7 +2694,7 @@
             showToast('Rekening toegevoegd.');
         });
 
-        /* === NAVIGATIE & COMMAND PALETTE === */
+        /* === NAVIGATIE === */
         const viewTitles = { dashboard: 'Overzicht & Balans', journaal: 'Journaal & Snelboeken', relaties: 'Debiteuren & Crediteuren', btw: 'BTW-Aangifte', grootboek: 'Grootboekschema', backup: 'Archief & Back-up', adminportal: 'Adminportal' };
         
         function switchView(viewName) {
@@ -3019,24 +2717,13 @@
 
         function escapeHtml(str) { return String(str).replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m])); }
 
-        // Command Palette
-        const cmdBackdrop = document.getElementById('cmdBackdrop');
-        const cmdInput = document.getElementById('cmdInput');
-        const commands = [
-            { label: 'Naar Overzicht & Balans', action: () => switchView('dashboard') },
-            { label: 'Naar Journaal & Snelboeken', action: () => switchView('journaal') },
-            { label: 'Naar BTW-Aangifte', action: () => switchView('btw') }
-        ];
+        document.getElementById('openCmdBtn').addEventListener('click', () => { document.getElementById('cmdBackdrop').classList.add('open'); document.getElementById('cmdInput').focus(); });
+        document.getElementById('cmdBackdrop').addEventListener('click', e => { if (e.target === document.getElementById('cmdBackdrop')) document.getElementById('cmdBackdrop').classList.remove('open'); });
 
-        document.getElementById('openCmdBtn').addEventListener('click', () => { cmdBackdrop.classList.add('open'); cmdInput.focus(); });
-        cmdBackdrop.addEventListener('click', e => { if (e.target === cmdBackdrop) cmdBackdrop.classList.remove('open'); });
-
-        // Clock
         setInterval(() => {
             document.getElementById('clockDisplay').textContent = new Date().toLocaleDateString('nl-NL', { weekday: 'short', hour: '2-digit', minute: '2-digit' });
         }, 1000);
 
-        // Start initialisatie
         initAuth();
     </script>
 </body>

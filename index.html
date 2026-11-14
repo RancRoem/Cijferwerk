@@ -305,19 +305,19 @@
             display: block;
         }
 
-        /* === KAARTEN, TABELLEN & FORMULIEREN === */
+        /* === KAARTEN, GRAFIEK, TABELLEN & FORMULIEREN === */
         .grid-cards {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
             gap: 16px;
-            margin-bottom: 24px;
+            margin-bottom: 20px;
         }
 
         .card {
             background-color: var(--bg-surface);
             border: 1px solid var(--border-color);
             border-radius: 8px;
-            padding: 20px;
+            padding: 18px 20px;
             box-shadow: var(--shadow-sm);
         }
 
@@ -329,9 +329,95 @@
         }
 
         .card-value {
-            font-size: 24px;
+            font-size: 23px;
             font-weight: 700;
             font-family: var(--font-mono);
+        }
+
+        .card-sub {
+            font-size: 11px;
+            color: var(--text-muted);
+            margin-top: 4px;
+        }
+
+        /* Dashboard Split: Grafiek + Belastingreservering */
+        .dashboard-analytics-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+
+        @media (max-width: 1024px) {
+            .dashboard-analytics-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .chart-container {
+            position: relative;
+            padding: 16px 20px;
+            height: 270px;
+        }
+
+        .chart-canvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+        .chart-tooltip {
+            position: absolute;
+            background-color: var(--bg-sidebar);
+            color: #ffffff;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.12s;
+            box-shadow: var(--shadow-lg);
+            z-index: 50;
+            white-space: nowrap;
+        }
+
+        .chart-legend {
+            display: flex;
+            gap: 16px;
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        .legend-item {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .legend-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 2px;
+        }
+
+        .reserve-list {
+            padding: 16px 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        .reserve-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .reserve-row:last-child {
+            border-bottom: none;
+            padding-bottom: 0;
         }
 
         .panel {
@@ -803,7 +889,6 @@
             color: var(--text-muted);
         }
 
-        /* Receipt Preview Modal */
         .viewer-modal {
             width: 92%;
             max-width: 860px;
@@ -920,18 +1005,89 @@
                         <div class="card">
                             <div class="card-label">Netto Omzet (Excl. BTW)</div>
                             <div class="card-value" id="kpiRevenue">€ 0,00</div>
+                            <div class="card-sub">Alle boekingen in selected jaar</div>
                         </div>
                         <div class="card">
                             <div class="card-label">Kosten (Excl. BTW)</div>
                             <div class="card-value" id="kpiExpenses">€ 0,00</div>
-                        </div>
-                        <div class="card">
-                            <div class="card-label">BTW Saldo (Af te dragen - Voorbelasting)</div>
-                            <div class="card-value" id="kpiVatBalance">€ 0,00</div>
+                            <div class="card-sub">Zakelijke kosten & inkoop</div>
                         </div>
                         <div class="card">
                             <div class="card-label">Netto Resultaat (Winst / Verlies)</div>
                             <div class="card-value" id="kpiNetProfit" style="color: var(--success);">€ 0,00</div>
+                            <div class="card-sub">Omzet minus kosten</div>
+                        </div>
+                        <div class="card">
+                            <div class="card-label">Vrij Besteedbaar Banksaldo</div>
+                            <div class="card-value" id="kpiFreeSpendable" style="color: var(--accent);">€ 0,00</div>
+                            <div class="card-sub" id="kpiBankRawSub">Banksaldo € 0,00 na reserveringen</div>
+                        </div>
+                    </div>
+
+                    <!-- GRAFIEK & BELASTINGRESERVERING -->
+                    <div class="dashboard-analytics-grid">
+                        <div class="panel" style="margin-bottom: 0;">
+                            <div class="panel-header">
+                                <div>
+                                    <div class="panel-title">Winst- & Verliesontwikkeling per Maand</div>
+                                    <div style="font-size: 12px; color: var(--text-muted);">Beweeg met de muis over een maand voor exacte bedragen</div>
+                                </div>
+                                <div class="toolbar-row">
+                                    <div class="chart-legend">
+                                        <span class="legend-item"><span class="legend-dot" style="background: var(--success);"></span>Omzet</span>
+                                        <span class="legend-item"><span class="legend-dot" style="background: var(--danger);"></span>Kosten</span>
+                                        <span class="legend-item"><span class="legend-dot" style="background: var(--accent); border-radius: 50%;"></span>Resultaat</span>
+                                    </div>
+                                    <select class="select" id="dashboardYearSelect" style="width: 110px;">
+                                        <option value="2026" selected>2026</option>
+                                        <option value="2025">2025</option>
+                                        <option value="ALL">Alles</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="chart-container" id="chartContainer">
+                                <canvas id="pnlCanvas" class="chart-canvas"></canvas>
+                                <div id="chartTooltip" class="chart-tooltip"></div>
+                            </div>
+                        </div>
+
+                        <div class="panel" style="margin-bottom: 0;">
+                            <div class="panel-header">
+                                <div>
+                                    <div class="panel-title">Belastingpotje & Liquiditeit</div>
+                                    <div style="font-size: 12px; color: var(--text-muted);">Aanbevolen reservering op rekening 1200</div>
+                                </div>
+                            </div>
+                            <div class="reserve-list">
+                                <div class="reserve-row">
+                                    <div>
+                                        <div style="font-weight: 600;">Zakelijke Bank (1100)</div>
+                                        <div style="font-size: 11px; color: var(--text-muted);">Huidig saldo op betaalrekening</div>
+                                    </div>
+                                    <div class="mono" style="font-weight: 700;" id="resBankBal">€ 0,00</div>
+                                </div>
+                                <div class="reserve-row">
+                                    <div>
+                                        <div style="font-weight: 600;">BTW-reservering (5g)</div>
+                                        <div style="font-size: 11px; color: var(--text-muted);">Af te dragen BTW minus voorbelasting</div>
+                                    </div>
+                                    <div class="mono" style="font-weight: 600; color: var(--warning);" id="resVatAmount">€ 0,00</div>
+                                </div>
+                                <div class="reserve-row">
+                                    <div>
+                                        <div style="font-weight: 600;">Inkomstenbelasting (ca. 37%)</div>
+                                        <div style="font-size: 11px; color: var(--text-muted);">Schatting over positieve nettowinst</div>
+                                    </div>
+                                    <div class="mono" style="font-weight: 600; color: var(--warning);" id="resIncomeTaxAmount">€ 0,00</div>
+                                </div>
+                                <div class="reserve-row">
+                                    <div>
+                                        <div style="font-weight: 600;">Nog te ontvangen (1300)</div>
+                                        <div style="font-size: 11px; color: var(--text-muted);">Openstaande klantfacturen</div>
+                                    </div>
+                                    <div class="mono" style="font-weight: 600; color: var(--success);" id="resOpenDebtors">€ 0,00</div>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
@@ -964,20 +1120,20 @@
                         <div class="panel-header">
                             <div>
                                 <div class="panel-title">Slimme Snel-invoer & Dubbel Boekhouden</div>
-                                <div style="font-size: 12px; color: var(--text-muted);">Typ een vrije regel om automatisch debet/credit-regels te genereren, of boek handmatig.</div>
+                                <div style="font-size: 12px; color: var(--text-muted);">Tip: voeg <strong>pin</strong> of <strong>ideal</strong> toe om direct op je bankrekening te boeken in plaats van op crediteuren.</div>
                             </div>
                         </div>
 
                         <div class="nlp-box">
                             <div class="nlp-input-row">
-                                <input type="text" class="input nlp-input" id="nlpInput" placeholder="Bijv: 12-11 KPN Zakelijk 54,45 21% telefoon — druk op Enter">
+                                <input type="text" class="input nlp-input" id="nlpInput" placeholder="Bijv: 14-11 Bol.com Kantoorartikelen 36,30 21% pin — druk op Enter">
                                 <button type="button" class="btn btn-primary" id="nlpParseBtn">Verwerk regel</button>
                             </div>
                             <div class="nlp-hints">
                                 <span>Voorbeelden (klik om te testen):</span>
-                                <span class="nlp-chip" data-example="12-11 KPN Zakelijk 54,45 21% telefoon">12-11 KPN Zakelijk 54,45 21% telefoon</span>
+                                <span class="nlp-chip" data-example="14-11 Bol.com Kantoorartikelen 36,30 21% pin">14-11 Bol.com Kantoorartikelen 36,30 21% pin</span>
                                 <span class="nlp-chip" data-example="factuur Studio Noord 1452,00 21% omzet">factuur Studio Noord 1452,00 21% omzet</span>
-                                <span class="nlp-chip" data-example="10-11 NS Reizen 28,50 9% reis">10-11 NS Reizen 28,50 9% reis</span>
+                                <span class="nlp-chip" data-example="10-11 NS Reizen 28,50 9% reis ideal">10-11 NS Reizen 28,50 9% reis ideal</span>
                             </div>
                         </div>
 
@@ -1019,7 +1175,6 @@
                             </div>
                             <div id="journalLinesContainer"></div>
 
-                            <!-- Bonnetje / Factuur Drag & Drop Zone -->
                             <div class="receipt-dropzone" id="receiptDropzone">
                                 <div class="receipt-drop-info">
                                     <div class="receipt-icon-box" id="receiptIconBox">BON</div>
@@ -1324,7 +1479,7 @@
     </div>
 
     <script>
-        /* === STAP 6: BONNETJES- & DOCUMENTKOPPELING IN INDEXEDDB === */
+        /* === STAP 7: LIVE W&V-GRAFIEK (CANVAS), BELASTINGPOTJE & PIN/IDEAL-HERKENNING === */
         const DB_NAME = 'CijferwerkDB';
         const DB_VERSION = 1;
 
@@ -1359,7 +1514,7 @@
             db: null,
             accounts: [],
             entries: [],
-            receiptsMeta: {}, // id -> { id, name, type, size }
+            receiptsMeta: {},
             accountBalances: {},
             draftLines: [],
             draftReceiptFile: null,
@@ -1367,7 +1522,8 @@
             currentView: 'dashboard',
             selectedCmdIndex: 0,
             lastKeyG: false,
-            lastVatReportText: ''
+            lastVatReportText: '',
+            chartMonthlyData: []
         };
 
         function formatEuro(amount, wholeEuros = false) {
@@ -1392,7 +1548,7 @@
 
         function addDaysToDate(isoDate, days) {
             const d = new Date(isoDate + 'T12:00:00');
-            d.setDate(d.getDate() + (parseInt(days, 10) || 14));
+            d.setDate(d.getDate() + (parseInt(days, 10) || 0));
             return d.toISOString().split('T')[0];
         }
 
@@ -1598,6 +1754,210 @@
             }
         }
 
+        /* === HTML5 CANVAS WINST & VERLIES GRAFIEK === */
+        const MONTH_LABELS = ['Jan', 'Feb', 'Mrt', 'Apr', 'Mei', 'Jun', 'Jul', 'Aug', 'Sep', 'Okt', 'Nov', 'Dec'];
+
+        function buildMonthlyPnlData(yearFilter) {
+            const months = Array.from({ length: 12 }, (_, idx) => ({
+                monthIndex: idx,
+                label: MONTH_LABELS[idx],
+                revenue: 0,
+                expenses: 0,
+                profit: 0
+            }));
+
+            state.entries.forEach(entry => {
+                if (!entry.date) return;
+                const [y, m] = entry.date.split('-');
+                if (yearFilter !== 'ALL' && y !== yearFilter) return;
+                const monthIdx = parseInt(m, 10) - 1;
+                if (monthIdx < 0 || monthIdx > 11) return;
+
+                entry.lines.forEach(line => {
+                    const acc = state.accounts.find(a => a.code === line.accountCode);
+                    if (!acc) return;
+                    if (acc.category === 'Opbrengsten') {
+                        months[monthIdx].revenue = roundCents(months[monthIdx].revenue + (line.credit - line.debit));
+                    } else if (acc.category === 'Kosten') {
+                        months[monthIdx].expenses = roundCents(months[monthIdx].expenses + (line.debit - line.credit));
+                    }
+                });
+            });
+
+            months.forEach(m => {
+                m.profit = roundCents(m.revenue - m.expenses);
+            });
+
+            state.chartMonthlyData = months;
+            return months;
+        }
+
+        function drawPnlChart() {
+            const canvas = document.getElementById('pnlCanvas');
+            if (!canvas) return;
+            const rect = canvas.getBoundingClientRect();
+            if (rect.width === 0 || rect.height === 0) return;
+
+            const dpr = window.devicePixelRatio || 1;
+            canvas.width = rect.width * dpr;
+            canvas.height = rect.height * dpr;
+
+            const ctx = canvas.getContext('2d');
+            ctx.scale(dpr, dpr);
+
+            const w = rect.width;
+            const h = rect.height;
+            const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+
+            const textColor = isDark ? '#94a3b8' : '#6b7280';
+            const gridColor = isDark ? '#334155' : '#e5e7eb';
+            const revColor = '#10b981';
+            const expColor = '#ef4444';
+            const profitColor = isDark ? '#60a5fa' : '#2563eb';
+
+            ctx.clearRect(0, 0, w, h);
+
+            const data = state.chartMonthlyData;
+            const padLeft = 62;
+            const padRight = 16;
+            const padTop = 16;
+            const padBottom = 30;
+            const plotW = w - padLeft - padRight;
+            const plotH = h - padTop - padBottom;
+
+            let maxVal = 100;
+            let minVal = 0;
+            data.forEach(d => {
+                maxVal = Math.max(maxVal, d.revenue, d.expenses, d.profit);
+                minVal = Math.min(minVal, d.profit, 0);
+            });
+            maxVal = Math.ceil((maxVal * 1.15) / 100) * 100;
+            minVal = minVal < 0 ? Math.floor((minVal * 1.15) / 100) * 100 : 0;
+            const range = maxVal - minVal || 100;
+
+            const yForVal = (val) => padTop + plotH - ((val - minVal) / range) * plotH;
+            const zeroY = yForVal(0);
+
+            // Horizontale hulplijnen + Y-as labels
+            ctx.font = '11px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+            ctx.textAlign = 'right';
+            ctx.textBaseline = 'middle';
+
+            const steps = 4;
+            for (let i = 0; i <= steps; i++) {
+                const val = minVal + (range / steps) * i;
+                const y = yForVal(val);
+                ctx.strokeStyle = gridColor;
+                ctx.lineWidth = 1;
+                ctx.beginPath();
+                ctx.moveTo(padLeft, y);
+                ctx.lineTo(w - padRight, y);
+                ctx.stroke();
+
+                ctx.fillStyle = textColor;
+                ctx.fillText(`€ ${Math.round(val)}`, padLeft - 8, y);
+            }
+
+            // Nul-lijn benadrukken
+            ctx.strokeStyle = isDark ? '#475569' : '#9ca3af';
+            ctx.lineWidth = 1.2;
+            ctx.beginPath();
+            ctx.moveTo(padLeft, zeroY);
+            ctx.lineTo(w - padRight, zeroY);
+            ctx.stroke();
+
+            // Staven (Omzet & Kosten) + Maandlabels
+            const colW = plotW / 12;
+            const barW = Math.min(16, colW * 0.28);
+            const profitPoints = [];
+
+            data.forEach((d, i) => {
+                const centerX = padLeft + colW * i + colW / 2;
+
+                // Omzet staaf
+                if (d.revenue > 0) {
+                    const yTop = yForVal(d.revenue);
+                    ctx.fillStyle = revColor;
+                    ctx.fillRect(centerX - barW - 2, yTop, barW, zeroY - yTop);
+                }
+
+                // Kosten staaf
+                if (d.expenses > 0) {
+                    const yTop = yForVal(d.expenses);
+                    ctx.fillStyle = expColor;
+                    ctx.fillRect(centerX + 2, yTop, barW, zeroY - yTop);
+                }
+
+                profitPoints.push({ x: centerX, y: yForVal(d.profit), data: d });
+
+                // X-as maandlabel
+                ctx.fillStyle = textColor;
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'top';
+                ctx.fillText(d.label, centerX, h - padBottom + 8);
+            });
+
+            // Resultaat lijn + punten
+            ctx.strokeStyle = profitColor;
+            ctx.lineWidth = 2.2;
+            ctx.beginPath();
+            profitPoints.forEach((pt, idx) => {
+                if (idx === 0) ctx.moveTo(pt.x, pt.y);
+                else ctx.lineTo(pt.x, pt.y);
+            });
+            ctx.stroke();
+
+            profitPoints.forEach(pt => {
+                ctx.fillStyle = profitColor;
+                ctx.beginPath();
+                ctx.arc(pt.x, pt.y, 3.5, 0, Math.PI * 2);
+                ctx.fill();
+            });
+        }
+
+        // Hover tooltip op grafiek
+        const pnlCanvas = document.getElementById('pnlCanvas');
+        const chartTooltip = document.getElementById('chartTooltip');
+
+        pnlCanvas.addEventListener('mousemove', (e) => {
+            const rect = pnlCanvas.getBoundingClientRect();
+            const relX = e.clientX - rect.left;
+            const padLeft = 62;
+            const padRight = 16;
+            const plotW = rect.width - padLeft - padRight;
+
+            if (relX < padLeft || relX > rect.width - padRight || state.chartMonthlyData.length === 0) {
+                chartTooltip.style.opacity = '0';
+                return;
+            }
+
+            const idx = Math.min(11, Math.max(0, Math.floor(((relX - padLeft) / plotW) * 12)));
+            const d = state.chartMonthlyData[idx];
+
+            chartTooltip.innerHTML = `
+                <div style="font-weight: 700; margin-bottom: 4px;">${d.label}</div>
+                <div>Omzet: <span style="color: #34d399; font-family: var(--font-mono);">${formatEuro(d.revenue)}</span></div>
+                <div>Kosten: <span style="color: #f87171; font-family: var(--font-mono);">${formatEuro(d.expenses)}</span></div>
+                <div style="border-top: 1px solid rgba(255,255,255,0.15); margin-top: 4px; padding-top: 4px;">
+                    Resultaat: <span style="color: #93c5fd; font-family: var(--font-mono); font-weight: 700;">${formatEuro(d.profit)}</span>
+                </div>
+            `;
+            const tipX = Math.min(rect.width - 170, Math.max(10, relX + 12));
+            chartTooltip.style.left = `${tipX}px`;
+            chartTooltip.style.top = `14px`;
+            chartTooltip.style.opacity = '1';
+        });
+
+        pnlCanvas.addEventListener('mouseleave', () => {
+            chartTooltip.style.opacity = '0';
+        });
+
+        window.addEventListener('resize', () => {
+            if (state.currentView === 'dashboard') drawPnlChart();
+        });
+
+        document.getElementById('dashboardYearSelect').addEventListener('change', renderDashboard);
+
         /* === BONNETJES DRAG & DROP EN VIEWER === */
         const dropzone = document.getElementById('receiptDropzone');
         const fileInput = document.getElementById('receiptFileInput');
@@ -1661,7 +2021,6 @@
             }
         });
 
-        // Viewer Modal voor opgeslagen bonnetjes
         const viewerBackdrop = document.getElementById('viewerBackdrop');
         const viewerBody = document.getElementById('viewerBody');
 
@@ -2017,7 +2376,7 @@
             });
         });
 
-        /* === SLIMME SNEL-INVOER (NATURAL LANGUAGE PARSER) === */
+        /* === SLIMME SNEL-INVOER (INCL. PIN / IDEAL / CONTANT HERKENNING) === */
         function parseNaturalLanguageInput(rawText) {
             const text = rawText.trim();
             if (!text) return null;
@@ -2056,6 +2415,9 @@
             }
 
             const isIncome = /\b(factuur|verkoop|omzet|klant|declaratie|opbrengst)\b/i.test(lower);
+            const isDirectBank = /\b(pin|ideal|betaald|overboeking|tikkie|incasso)\b/i.test(lower);
+            const isDirectCash = /\b(contant|kas)\b/i.test(lower);
+
             let targetAccount = isIncome ? (vatRate === 9 ? '8200' : vatRate === 0 ? '8300' : '8000') : '4300';
 
             const keywordMap = [
@@ -2079,7 +2441,7 @@
             }
 
             const cleanDesc = remaining
-                .replace(/\b(factuur|inkoop|verkoop|kantoor|telefoon|reis|omzet)\b/gi, '')
+                .replace(/\b(factuur|inkoop|verkoop|kantoor|telefoon|reis|omzet|pin|ideal|betaald|contant|kas)\b/gi, '')
                 .replace(/\s+/g, ' ')
                 .trim() || (isIncome ? 'Verkoopfactuur' : 'Inkoopfactuur');
 
@@ -2087,25 +2449,39 @@
             const vatAmount = roundCents(grossAmount - netAmount);
 
             const lines = [];
+            let journalType = isIncome ? 'Verkoop' : 'Inkoop';
+            let termDays = 14;
+
             if (isIncome) {
-                lines.push({ accountCode: '1300', memo: cleanDesc, debit: grossAmount, credit: 0 });
+                const contraAcc = isDirectBank ? '1100' : isDirectCash ? '1000' : '1300';
+                if (isDirectBank || isDirectCash) {
+                    journalType = 'Bank';
+                    termDays = 0;
+                }
+                lines.push({ accountCode: contraAcc, memo: cleanDesc, debit: grossAmount, credit: 0 });
                 lines.push({ accountCode: targetAccount, memo: cleanDesc, debit: 0, credit: netAmount });
                 if (vatAmount > 0) {
                     const vatAcc = vatRate === 9 ? '1520' : '1510';
                     lines.push({ accountCode: vatAcc, memo: `BTW ${vatRate}%`, debit: 0, credit: vatAmount });
                 }
             } else {
+                const contraAcc = isDirectBank ? '1100' : isDirectCash ? '1000' : '1600';
+                if (isDirectBank || isDirectCash) {
+                    journalType = 'Bank';
+                    termDays = 0;
+                }
                 lines.push({ accountCode: targetAccount, memo: cleanDesc, debit: netAmount, credit: 0 });
                 if (vatAmount > 0) {
                     lines.push({ accountCode: '1530', memo: `Voorbelasting ${vatRate}%`, debit: vatAmount, credit: 0 });
                 }
-                lines.push({ accountCode: '1600', memo: cleanDesc, debit: 0, credit: grossAmount });
+                lines.push({ accountCode: contraAcc, memo: cleanDesc, debit: 0, credit: grossAmount });
             }
 
             return {
                 date: parsedDate,
                 description: cleanDesc,
-                journalType: isIncome ? 'Verkoop' : 'Inkoop',
+                journalType,
+                termDays,
                 lines
             };
         }
@@ -2232,6 +2608,7 @@
             document.getElementById('entryDate').value = parsed.date;
             document.getElementById('entryDesc').value = parsed.description;
             document.getElementById('entryJournalType').value = parsed.journalType;
+            document.getElementById('entryTermDays').value = String(parsed.termDays);
             state.draftLines = parsed.lines;
             renderJournalLines();
             showToast('Regel gesplitst in debet- en creditregels. Controleer en sla op.');
@@ -2405,30 +2782,54 @@
         }
 
         function renderDashboard() {
+            const yearFilter = document.getElementById('dashboardYearSelect').value;
+
             let revenue = 0;
             let expenses = 0;
 
-            state.accounts.forEach(acc => {
-                const rawBal = state.accountBalances[acc.code] || 0;
-                if (acc.category === 'Opbrengsten') {
-                    revenue = roundCents(revenue - rawBal);
-                } else if (acc.category === 'Kosten') {
-                    expenses = roundCents(expenses + rawBal);
-                }
+            state.entries.forEach(entry => {
+                if (yearFilter !== 'ALL' && !entry.date.startsWith(yearFilter)) return;
+                entry.lines.forEach(line => {
+                    const acc = state.accounts.find(a => a.code === line.accountCode);
+                    if (!acc) return;
+                    if (acc.category === 'Opbrengsten') {
+                        revenue = roundCents(revenue + (line.credit - line.debit));
+                    } else if (acc.category === 'Kosten') {
+                        expenses = roundCents(expenses + (line.debit - line.credit));
+                    }
+                });
             });
 
+            const netProfit = roundCents(revenue - expenses);
+
+            // Liquiditeit & belastingreservering (altijd over actuele balansstand)
+            const bankBal = roundCents(state.accountBalances['1100'] || 0);
             const vatPayable = roundCents(-(state.accountBalances['1510'] || 0) - (state.accountBalances['1520'] || 0));
             const vatReceivable = roundCents(state.accountBalances['1530'] || 0);
-            const vatNet = roundCents(vatPayable - vatReceivable);
-            const netProfit = roundCents(revenue - expenses);
+            const vatReserve = Math.max(0, roundCents(vatPayable - vatReceivable));
+            const incomeTaxReserve = netProfit > 0 ? roundCents(netProfit * 0.37) : 0;
+            const freeSpendable = roundCents(bankBal - vatReserve - incomeTaxReserve);
+            const openDebtors = roundCents(state.accountBalances['1300'] || 0);
 
             document.getElementById('kpiRevenue').textContent = formatEuro(revenue);
             document.getElementById('kpiExpenses').textContent = formatEuro(expenses);
-            document.getElementById('kpiVatBalance').textContent = formatEuro(vatNet);
 
             const profitEl = document.getElementById('kpiNetProfit');
             profitEl.textContent = formatEuro(netProfit);
             profitEl.style.color = netProfit >= 0 ? 'var(--success)' : 'var(--danger)';
+
+            const freeEl = document.getElementById('kpiFreeSpendable');
+            freeEl.textContent = formatEuro(freeSpendable);
+            freeEl.style.color = freeSpendable >= 0 ? 'var(--accent)' : 'var(--danger)';
+            document.getElementById('kpiBankRawSub').textContent = `Banksaldo ${formatEuro(bankBal)} na belastingpotje`;
+
+            document.getElementById('resBankBal').textContent = formatEuro(bankBal);
+            document.getElementById('resVatAmount').textContent = formatEuro(vatReserve);
+            document.getElementById('resIncomeTaxAmount').textContent = formatEuro(incomeTaxReserve);
+            document.getElementById('resOpenDebtors').textContent = formatEuro(openDebtors);
+
+            buildMonthlyPnlData(yearFilter);
+            requestAnimationFrame(drawPnlChart);
 
             const dashBody = document.getElementById('dashboardRecentBody');
             const recent = state.entries.slice(0, 5);
@@ -2510,6 +2911,10 @@
             });
 
             document.getElementById('currentViewTitle').textContent = viewTitles[viewName];
+
+            if (viewName === 'dashboard') {
+                requestAnimationFrame(drawPnlChart);
+            }
         }
 
         function toggleTheme() {
@@ -2517,6 +2922,9 @@
             const next = html.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
             html.setAttribute('data-theme', next);
             localStorage.setItem('cijferwerk_theme', next);
+            if (state.currentView === 'dashboard') {
+                requestAnimationFrame(drawPnlChart);
+            }
         }
 
         function showToast(msg) {
@@ -2609,7 +3017,7 @@
             if (e.target === cmdBackdrop) closeCommandPalette();
         });
 
-        // Globale sneltoetsen (Ctrl+K, Escape en G-navigatie)
+        // Globale sneltoetsen
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape' && viewerBackdrop.classList.contains('open')) {
                 closeReceiptViewer();

@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cijferwerk — Professionele Boekhoudsoftware</title>
     <style>
-        /* === DESIGN TOKENS & VLOEIENDE ANIMATIES (STAP 10) === */
+        /* === DESIGN TOKENS & FINISHING TOUCH (STAP 11) === */
         :root {
             --bg-app: #f8fafc;
             --bg-surface: #ffffff;
@@ -35,15 +35,15 @@
         }
 
         [data-theme="dark"] {
-            --bg-app: #090d16;
-            --bg-surface: #111827;
-            --bg-subtle: #1f2937;
-            --bg-sidebar: #05070c;
-            --bg-sidebar-hover: #111827;
+            --bg-app: #070a12;
+            --bg-surface: #0f172a;
+            --bg-subtle: #1e293b;
+            --bg-sidebar: #030508;
+            --bg-sidebar-hover: #0f172a;
             --bg-sidebar-active: #3b82f6;
-            --border-color: #374151;
-            --text-main: #f9fafb;
-            --text-muted: #9ca3af;
+            --border-color: #334155;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
             --accent: #3b82f6;
             --accent-hover: #60a5fa;
             --accent-soft: rgba(59, 130, 246, 0.15);
@@ -367,6 +367,9 @@
             margin-bottom: 6px;
             text-transform: uppercase;
             letter-spacing: 0.03em;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
 
         .card-value {
@@ -381,6 +384,18 @@
             color: var(--text-muted);
             margin-top: 4px;
         }
+
+        .trend-badge {
+            font-size: 11px;
+            font-family: var(--font-mono);
+            font-weight: 600;
+            padding: 1px 6px;
+            border-radius: 4px;
+        }
+
+        .trend-up { background-color: var(--success-soft); color: var(--success); }
+        .trend-down { background-color: var(--danger-soft); color: var(--danger); }
+        .trend-neutral { background-color: var(--bg-subtle); color: var(--text-muted); }
 
         /* Dashboard Split: Grafiek + Belastingreservering */
         .dashboard-analytics-grid {
@@ -864,7 +879,7 @@
             background-color: var(--success);
         }
 
-        /* Toast notificatie (met slide-up animatie) */
+        /* Toast notificatie */
         .toast {
             position: fixed;
             bottom: 42px;
@@ -887,7 +902,7 @@
             transform: translateY(0);
         }
 
-        /* === MODALS (COMMAND PALETTE & RECEIPT VIEWER) === */
+        /* === MODALS === */
         .modal-backdrop {
             position: fixed;
             inset: 0;
@@ -1088,22 +1103,34 @@
                 <section id="view-dashboard" class="view-section active">
                     <div class="grid-cards">
                         <div class="card">
-                            <div class="card-label">Netto Omzet (Excl. BTW)</div>
+                            <div class="card-label">
+                                <span>Netto Omzet (Excl. BTW)</span>
+                                <span class="trend-badge trend-neutral" id="trendRevenue">vs vorig</span>
+                            </div>
                             <div class="card-value" id="kpiRevenue">€ 0,00</div>
                             <div class="card-sub">Geselecteerde periode</div>
                         </div>
                         <div class="card">
-                            <div class="card-label">Kosten (Excl. BTW)</div>
+                            <div class="card-label">
+                                <span>Kosten (Excl. BTW)</span>
+                                <span class="trend-badge trend-neutral" id="trendExpenses">vs vorig</span>
+                            </div>
                             <div class="card-value" id="kpiExpenses">€ 0,00</div>
                             <div class="card-sub">Zakelijke kosten & inkoop</div>
                         </div>
                         <div class="card">
-                            <div class="card-label">Netto Resultaat (Winst / Verlies)</div>
+                            <div class="card-label">
+                                <span>Netto Resultaat</span>
+                                <span class="trend-badge trend-neutral" id="trendProfit">winst / verlies</span>
+                            </div>
                             <div class="card-value" id="kpiNetProfit" style="color: var(--success);">€ 0,00</div>
                             <div class="card-sub">Omzet minus kosten</div>
                         </div>
                         <div class="card">
-                            <div class="card-label">Vrij Besteedbaar Banksaldo</div>
+                            <div class="card-label">
+                                <span>Vrij Besteedbaar</span>
+                                <span class="trend-badge trend-success">liquide</span>
+                            </div>
                             <div class="card-value" id="kpiFreeSpendable" style="color: var(--accent);">€ 0,00</div>
                             <div class="card-sub" id="kpiBankRawSub">Banksaldo € 0,00 na belastingpotje</div>
                         </div>
@@ -1176,7 +1203,7 @@
                         </div>
                     </div>
 
-                    <div class="panel">
+                    <div class="panel" style="margin-top: 20px;">
                         <div class="panel-header">
                             <div class="panel-title">Recente Journaalposten</div>
                             <button class="btn" onclick="switchView('journaal')">Naar Journaal & Snelboeken →</button>
@@ -1620,7 +1647,7 @@
     </div>
 
     <script>
-        /* === STAP 10: VLOEIENDE ANIMATIES & OVERGANGEN === */
+        /* === STAP 11: MINI-TRENDS & FINISHING TOUCH === */
         const DB_NAME = 'CijferwerkDB';
         const DB_VERSION = 1;
 
@@ -2155,7 +2182,7 @@
             const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
 
             const textColor = isDark ? '#94a3b8' : '#64748b';
-            const gridColor = isDark ? '#374151' : '#e2e8f0';
+            const gridColor = isDark ? '#334155' : '#e2e8f0';
             const revColor = '#059669';
             const expColor = '#dc2626';
             const profitColor = isDark ? '#60a5fa' : '#2563eb';
@@ -2202,7 +2229,7 @@
                 ctx.fillText(`€ ${Math.round(val)}`, padLeft - 8, y);
             }
 
-            ctx.strokeStyle = isDark ? '#4b5563' : '#94a3b8';
+            ctx.strokeStyle = isDark ? '#475569' : '#94a3b8';
             ctx.lineWidth = 1.2;
             ctx.beginPath();
             ctx.moveTo(padLeft, zeroY);
@@ -3124,20 +3151,44 @@
             let revenue = 0;
             let expenses = 0;
 
+            const now = new Date();
+            const currentMonthStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+            const prevMonthDate = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+            const prevMonthStr = `${prevMonthDate.getFullYear()}-${String(prevMonthDate.getMonth() + 1).padStart(2, '0')}`;
+
+            let curMonthRev = 0, prevMonthRev = 0;
+            let curMonthExp = 0, prevMonthExp = 0;
+
             state.entries.forEach(entry => {
-                if (yearFilter !== 'ALL' && !entry.date.startsWith(yearFilter)) return;
-                entry.lines.forEach(line => {
-                    const acc = state.accounts.find(a => a.code === line.accountCode);
-                    if (!acc) return;
-                    if (acc.category === 'Opbrengsten') {
-                        revenue = roundCents(revenue + (line.credit - line.debit));
-                    } else if (acc.category === 'Kosten') {
-                        expenses = roundCents(expenses + (line.debit - line.credit));
-                    }
-                });
+                if (!entry.date) return;
+                const isThisMonth = entry.date.startsWith(currentMonthStr);
+                const isPrevMonth = entry.date.startsWith(prevMonthStr);
+
+                if (yearFilter === 'ALL' || entry.date.startsWith(yearFilter)) {
+                    entry.lines.forEach(line => {
+                        const acc = state.accounts.find(a => a.code === line.accountCode);
+                        if (!acc) return;
+                        if (acc.category === 'Opbrengsten') {
+                            revenue = roundCents(revenue + (line.credit - line.debit));
+                            if (isThisMonth) curMonthRev += (line.credit - line.debit);
+                            if (isPrevMonth) prevMonthRev += (line.credit - line.debit);
+                        } else if (acc.category === 'Kosten') {
+                            expenses = roundCents(expenses + (line.debit - line.credit));
+                            if (isThisMonth) curMonthExp += (line.debit - line.credit);
+                            if (isPrevMonth) prevMonthExp += (line.debit - line.credit);
+                        }
+                    });
+                }
             });
 
             const netProfit = roundCents(revenue - expenses);
+            const curMonthProfit = curMonthRev - curMonthExp;
+            const prevMonthProfit = prevMonthRev - prevMonthExp;
+
+            // Update trend badges
+            updateTrendBadge('trendRevenue', curMonthRev, prevMonthRev);
+            updateTrendBadge('trendExpenses', curMonthExp, prevMonthExp, true);
+            updateTrendBadge('trendProfit', curMonthProfit, prevMonthProfit);
 
             const bankBal = roundCents(state.accountBalances['1100'] || 0);
             const vatPayable = roundCents(-(state.accountBalances['1510'] || 0) - (state.accountBalances['1520'] || 0));
@@ -3183,6 +3234,34 @@
                         </tr>
                     `;
                 }).join('');
+            }
+        }
+
+        function updateTrendBadge(elementId, currentVal, prevVal, invertGood = false) {
+            const el = document.getElementById(elementId);
+            if (!el) return;
+
+            if (prevVal === 0 && currentVal === 0) {
+                el.textContent = 'geen wijziging';
+                el.className = 'trend-badge trend-neutral';
+                return;
+            }
+
+            const diff = currentVal - prevVal;
+            const pct = prevVal !== 0 ? Math.round((diff / Math.abs(prevVal)) * 100) : (currentVal > 0 ? 100 : 0);
+            const sign = pct > 0 ? '+' : '';
+
+            el.textContent = `${sign}${pct}% vs vor. m.`;
+
+            let isPositive = diff > 0;
+            if (invertGood) isPositive = !isPositive;
+
+            if (diff === 0) {
+                el.className = 'trend-badge trend-neutral';
+            } else if (isPositive) {
+                el.className = 'trend-badge trend-up';
+            } else {
+                el.className = 'trend-badge trend-down';
             }
         }
 
@@ -3369,7 +3448,7 @@
             }
 
             const tag = document.activeElement.tagName.toLowerCase();
-            if (tag === 'input' || tag === 'select' || tag === 'textarea' || cmdBackdrop.classList.contains('open') || viewerBackdrop.classList.contains('open')) {
+            if (tag === 'input' || tag === 'select' || tag === 'textarea' || cmdBackdrop.classList.contains('open' ) || viewerBackdrop.classList.contains('open')) {
                 return;
             }
 
